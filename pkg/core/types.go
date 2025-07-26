@@ -6,11 +6,12 @@ type GameState struct {
 	RandSeed   int64
 	EventIndex uint8
 	
-	Rooms   map[RoomID]*RoomState
-	Players map[PlayerID]*PlayerState
-	Events  []EventCard
-	Bag     []Token
-	Enemies map[EnemyID]*Enemy
+	Rooms         map[RoomID]*RoomState
+	Players       map[PlayerID]*PlayerState
+	Events        []EventCard
+	Bag           []Token
+	Enemies       map[EnemyID]*Enemy
+	UsedQuestions []int // Track used question IDs
 }
 
 type RoomState struct {
@@ -94,3 +95,10 @@ type Coord struct {
 
 type EventCard struct{}
 type Card struct{}
+
+type Question struct {
+	ID            int
+	Text          string
+	Options       [4]string
+	CorrectAnswer int
+}

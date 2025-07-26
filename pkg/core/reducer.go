@@ -39,15 +39,16 @@ func Apply(state GameState, action Action) GameState {
 // Deep copy helper function
 func deepCopyGameState(state GameState) GameState {
 	newState := GameState{
-		Round:      state.Round,
-		Time:       state.Time,
-		RandSeed:   state.RandSeed,
-		EventIndex: state.EventIndex,
-		Rooms:      make(map[RoomID]*RoomState),
-		Players:    make(map[PlayerID]*PlayerState),
-		Events:     make([]EventCard, len(state.Events)),
-		Bag:        make([]Token, len(state.Bag)),
-		Enemies:    make(map[EnemyID]*Enemy),
+		Round:         state.Round,
+		Time:          state.Time,
+		RandSeed:      state.RandSeed,
+		EventIndex:    state.EventIndex,
+		Rooms:         make(map[RoomID]*RoomState),
+		Players:       make(map[PlayerID]*PlayerState),
+		Events:        make([]EventCard, len(state.Events)),
+		Bag:           make([]Token, len(state.Bag)),
+		Enemies:       make(map[EnemyID]*Enemy),
+		UsedQuestions: make([]int, len(state.UsedQuestions)),
 	}
 	
 	// Copy rooms
@@ -86,9 +87,10 @@ func deepCopyGameState(state GameState) GameState {
 		copy(newState.Players[id].Discard, player.Discard)
 	}
 	
-	// Copy events and bag
+	// Copy events, bag, and used questions
 	copy(newState.Events, state.Events)
 	copy(newState.Bag, state.Bag)
+	copy(newState.UsedQuestions, state.UsedQuestions)
 	
 	// Copy enemies
 	for id, enemy := range state.Enemies {
