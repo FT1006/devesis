@@ -5,6 +5,15 @@ import (
 	"sort"
 )
 
+// Direction sets for neighbor computation
+var (
+	orthoDirs = []Coord{{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
+	diagDirs  = []Coord{
+		{-1, -1}, {-1, 1},
+		{1, -1}, {1, 1},
+	}
+)
+
 // Pre-computed adjacency map for performance
 var adjacencyMap = buildAdjacency()
 
@@ -82,6 +91,35 @@ func CanMove(gs *GameState, from, to RoomID) bool {
 	}).Valid
 }
 
+// computeNeighbors is the shared neighbor computation algorithm
+func computeNeighbors(pos Coord, dirs []Coord) []RoomID {
+	var ids []string
+	for _, d := range dirs {
+		target := Coord{pos.Row + d.Row, pos.Col + d.Col}
+		for id, p := range ROOM_POSITIONS {
+			if p == target {
+				ids = append(ids, id)
+				break
+			}
+		}
+	}
+	sort.Strings(ids) // deterministic order
+	out := make([]RoomID, len(ids))
+	for i, id := range ids {
+		out[i] = RoomID(id)
+	}
+	return out
+}
+
+// buildAdjacency pre-computes all orthogonal adjacencies
+func buildAdjacency() map[RoomID][]RoomID {
+	adj := make(map[RoomID][]RoomID, len(ROOM_POSITIONS))
+	for id, pos := range ROOM_POSITIONS {
+		adj[RoomID(id)] = computeNeighbors(pos, orthoDirs)
+	}
+	return adj
+}
+
 // getNeighbors returns adjacent rooms with deterministic ordering
 func getNeighbors(roomID RoomID, diagonal bool) []RoomID {
 	if !diagonal {
@@ -94,65 +132,19 @@ func getNeighbors(roomID RoomID, diagonal bool) []RoomID {
 	if !exists {
 		return nil
 	}
-
-	directions := []Coord{
-		{-1, -1}, {-1, 0}, {-1, 1},
-		{0, -1}, {0, 1},
-		{1, -1}, {1, 0}, {1, 1},
-	}
-
-	var neighbors []string
-	for _, dir := range directions {
-		newPos := Coord{pos.Row + dir.Row, pos.Col + dir.Col}
-		for id, roomPos := range ROOM_POSITIONS {
-			if roomPos == newPos {
-				neighbors = append(neighbors, id)
-				break
-			}
-		}
-	}
-
-	// Sort for deterministic ordering
-	sort.Strings(neighbors)
-	
-	result := make([]RoomID, len(neighbors))
-	for i, id := range neighbors {
-		result[i] = RoomID(id)
-	}
-	return result
+	return computeNeighbors(pos, diagDirs)
 }
 
-// GetAdjacentRooms maintains backward compatibility
+// GetAdjacentRooms maintains backward compatibility (orthogonal only, fast)
 func GetAdjacentRooms(roomID RoomID) []RoomID {
-	return getNeighbors(roomID, false)
+	return adjacencyMap[roomID]
 }
 
-// buildAdjacency pre-computes all orthogonal adjacencies
-func buildAdjacency() map[RoomID][]RoomID {
-	adj := make(map[RoomID][]RoomID)
-	directions := []Coord{{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
-	
-	for id, pos := range ROOM_POSITIONS {
-		var neighbors []string
-		for _, dir := range directions {
-			newPos := Coord{pos.Row + dir.Row, pos.Col + dir.Col}
-			for neighborID, neighborPos := range ROOM_POSITIONS {
-				if neighborPos == newPos {
-					neighbors = append(neighbors, neighborID)
-					break
-				}
-			}
-		}
-		
-		// Sort for deterministic ordering
-		sort.Strings(neighbors)
-		
-		roomNeighbors := make([]RoomID, len(neighbors))
-		for i, nid := range neighbors {
-			roomNeighbors[i] = RoomID(nid)
-		}
-		adj[RoomID(id)] = roomNeighbors
+// GetDiagonalNeighbors provides diagonal lookup (rare, compute on demand)
+func GetDiagonalNeighbors(roomID RoomID) []RoomID {
+	pos, ok := ROOM_POSITIONS[string(roomID)]
+	if !ok {
+		return nil
 	}
-	
-	return adj
+	return computeNeighbors(pos, diagDirs)
 }
