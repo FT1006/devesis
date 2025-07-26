@@ -13,6 +13,10 @@ const (
 	MeleeAmmoCost     = 0
 	ShootAmmoCost     = 1
 	
+	// Combat damage
+	ShootDamage = 1
+	MeleeDamage = 1
+	
 	// Room abilities
 	MedBayHealAmount  = 2
 	AmmoCacheAmount   = 3
