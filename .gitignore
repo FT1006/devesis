@@ -32,7 +32,7 @@ go.work.sum
 /bin/
 /dist/
 
-# Temporary: Ignore M0 setup until needed
+# Temporary: Ignore until needed
 .github/
 .golangci.yml
 .editorconfig
@@ -41,3 +41,6 @@ go.work.sum
 # .idea/
 # .vscode/
 docs/
+
+# Handover notes between Claude conversations
+handovers/
