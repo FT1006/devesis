@@ -10,8 +10,8 @@ func ApplyCardEffects(state GameState, card Card, playerID PlayerID) GameState {
 		return state
 	}
 
-	// Apply effects in order
-	newState := state
+	// Apply effects in order  
+	newState := deepCopyGameState(state)
 	for _, effect := range card.Effects {
 		if err := applyEffect(&newState, effect, playerID); err != nil {
 			// Return original state if any effect fails

@@ -46,15 +46,20 @@ func ApplyDrawCards(state *GameState, effect Effect, playerID PlayerID) error {
 func ApplyDiscardCards(state *GameState, effect Effect, playerID PlayerID) error {
 	targets := getPlayerTargets(state, effect.Scope, playerID)
 	for _, player := range targets {
-		cardsToDiscard := effect.N
-		if cardsToDiscard > len(player.Hand) {
-			cardsToDiscard = len(player.Hand)
-		}
-		// Remove random cards from hand
-		if cardsToDiscard > 0 {
-			newHand := make([]CardID, len(player.Hand)-cardsToDiscard)
-			copy(newHand, player.Hand[cardsToDiscard:])
-			player.Hand = newHand
+		if effect.N == ALL {
+			// Remove all cards
+			player.Hand = []CardID{}
+		} else {
+			cardsToDiscard := effect.N
+			if cardsToDiscard > len(player.Hand) {
+				cardsToDiscard = len(player.Hand)
+			}
+			// Remove cards from beginning of hand
+			if cardsToDiscard > 0 {
+				newHand := make([]CardID, len(player.Hand)-cardsToDiscard)
+				copy(newHand, player.Hand[cardsToDiscard:])
+				player.Hand = newHand
+			}
 		}
 	}
 	return nil
