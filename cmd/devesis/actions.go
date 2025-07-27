@@ -142,6 +142,19 @@ func (g *GameManager) getRoomTypeName(roomType core.RoomType) string {
 	}
 }
 
+func (g *GameManager) getEnemyName(enemyType core.EnemyType) string {
+	switch enemyType {
+	case core.InfiniteLoop:
+		return "Infinite Loop"
+	case core.StackOverflow:
+		return "Stack Overflow"
+	case core.Pythogoras:
+		return "Pythogoras"
+	default:
+		return "Unknown Enemy"
+	}
+}
+
 func (g *GameManager) executeSearch() error {
 	player := core.GetActivePlayer(g.state)
 	if player == nil {
@@ -172,14 +185,55 @@ func (g *GameManager) executeShoot() error {
 		return fmt.Errorf("no active player")
 	}
 	
+	// Check ammo before attempting
+	if player.Ammo < core.ShootAmmoCost {
+		fmt.Printf("✗ Not enough ammo! Need %d ammo, have %d.\\n", core.ShootAmmoCost, player.Ammo)
+		return nil
+	}
+	
+	// Get adjacent rooms and count targets
+	adjacentRooms := core.GetAdjacentRooms(player.Location)
+	targets := make(map[core.RoomID][]core.EnemyID)
+	totalTargets := 0
+	
+	for enemyID, enemy := range g.state.Enemies {
+		for _, roomID := range adjacentRooms {
+			if enemy.Location == roomID {
+				targets[roomID] = append(targets[roomID], enemyID)
+				totalTargets++
+				break
+			}
+		}
+	}
+	
+	if totalTargets == 0 {
+		fmt.Println("✗ No enemies in adjacent rooms to shoot!")
+		return nil
+	}
+	
 	action := core.ShootAction{
 		PlayerID: player.ID,
 	}
 	
-	newState := core.Apply(*g.state, action)
-	g.state = &newState
-	fmt.Println("✓ Shoot action executed.")
+	newState := core.ApplyCombat(*g.state, action)
 	
+	// Show combat results
+	fmt.Printf("🔫 Shooting adjacent rooms! (-%d ammo)\\n", core.ShootAmmoCost)
+	for roomID, enemyIDs := range targets {
+		for _, enemyID := range enemyIDs {
+			oldEnemy := g.state.Enemies[enemyID]
+			newEnemy, exists := newState.Enemies[enemyID]
+			
+			if !exists {
+				fmt.Printf("   💀 %s in %s destroyed!\\n", g.getEnemyName(oldEnemy.Type), roomID)
+			} else if newEnemy.HP < oldEnemy.HP {
+				fmt.Printf("   🎯 %s in %s: %d → %d HP\\n", 
+					g.getEnemyName(oldEnemy.Type), roomID, oldEnemy.HP, newEnemy.HP)
+			}
+		}
+	}
+	
+	g.state = &newState
 	return nil
 }
 
@@ -189,14 +243,40 @@ func (g *GameManager) executeMelee() error {
 		return fmt.Errorf("no active player")
 	}
 	
+	// Count targets in current room
+	targets := make([]core.EnemyID, 0)
+	for enemyID, enemy := range g.state.Enemies {
+		if enemy.Location == player.Location {
+			targets = append(targets, enemyID)
+		}
+	}
+	
+	if len(targets) == 0 {
+		fmt.Println("✗ No enemies in current room to attack!")
+		return nil
+	}
+	
 	action := core.MeleeAction{
 		PlayerID: player.ID,
 	}
 	
-	newState := core.Apply(*g.state, action)
-	g.state = &newState
-	fmt.Println("✓ Melee attack executed.")
+	newState := core.ApplyCombat(*g.state, action)
 	
+	// Show combat results
+	fmt.Println("⚔️ Melee attack!")
+	for _, enemyID := range targets {
+		oldEnemy := g.state.Enemies[enemyID]
+		newEnemy, exists := newState.Enemies[enemyID]
+		
+		if !exists {
+			fmt.Printf("   💀 %s destroyed!\\n", g.getEnemyName(oldEnemy.Type))
+		} else if newEnemy.HP < oldEnemy.HP {
+			fmt.Printf("   🎯 %s: %d → %d HP\\n", 
+				g.getEnemyName(oldEnemy.Type), oldEnemy.HP, newEnemy.HP)
+		}
+	}
+	
+	g.state = &newState
 	return nil
 }
 
