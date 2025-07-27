@@ -24,12 +24,30 @@ func (g *GameManager) executeMove(args []string) error {
 		return nil
 	}
 	
-	// Get a coding question before allowing movement
-	question, questionState := core.GetRandomQuestion(*g.state, g.state.RandSeed)
-	if question.ID == 0 {
-		// No questions available, allow movement without question
-		fmt.Println("⚠ No questions available, movement allowed.")
+	// Check if target room is already explored - no question needed
+	targetRoomState := g.state.Rooms[core.RoomID(targetRoom)]
+	if targetRoomState != nil && targetRoomState.Explored {
+		// Skip question for explored rooms
+		fmt.Printf("Moving to explored room %s (no question needed).\n", targetRoom)
 	} else {
+		// Warn about unexplored room and get confirmation
+		fmt.Printf("⚠️  Warning: %s is unexplored! You'll need to answer a coding question.\n", targetRoom)
+		fmt.Printf("Wrong answers cause bugs to spread and you lose all cards!\n")
+		fmt.Print("Continue? (y/n): ")
+		
+		var confirm string
+		fmt.Scanf("%s", &confirm)
+		if confirm != "y" && confirm != "Y" && confirm != "yes" && confirm != "Yes" {
+			fmt.Println("Movement cancelled.")
+			return nil
+		}
+		
+		// Get a coding question before allowing movement to unexplored rooms
+		question, questionState := core.GetRandomQuestion(*g.state, g.state.RandSeed)
+		if question.ID == 0 {
+			// No questions available, allow movement without question
+			fmt.Println("⚠ No questions available, movement allowed.")
+		} else {
 		// Show the question
 		fmt.Printf("\n[CODING CHALLENGE] Answer correctly to move to %s:\n", targetRoom)
 		fmt.Printf("%s\n\n", question.Text)
@@ -57,6 +75,7 @@ func (g *GameManager) executeMove(args []string) error {
 		}
 		// Update state to mark question as used for correct answers
 		g.state = &questionState
+		}
 	}
 	
 	// Apply the movement action
