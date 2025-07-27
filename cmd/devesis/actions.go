@@ -181,6 +181,16 @@ func (g *GameManager) executeSearch() error {
 		return fmt.Errorf("no active player")
 	}
 	
+	// Check if room was already searched
+	currentRoom := g.state.Rooms[player.Location]
+	if currentRoom != nil && currentRoom.Searched {
+		fmt.Println("❌ This room has already been searched.")
+		return nil
+	}
+	
+	// Count cards before search
+	cardsBefore := len(player.Hand)
+	
 	action := core.SearchAction{
 		PlayerID: player.ID,
 	}
@@ -190,8 +200,26 @@ func (g *GameManager) executeSearch() error {
 	// Check if search succeeded by comparing room searched status
 	room := newState.Rooms[player.Location]
 	if room != nil && room.Searched {
+		// Search succeeded
+		newPlayer := newState.Players[player.ID]
+		cardsAfter := len(newPlayer.Hand)
+		
 		g.state = &newState
-		fmt.Println("✓ You search the room.")
+		fmt.Println("🔍 You search the room thoroughly...")
+		
+		if cardsAfter > cardsBefore {
+			// Found a card!
+			newCardID := newPlayer.Hand[cardsAfter-1] // Last card added
+			if card, exists := core.CardDB[newCardID]; exists {
+				fmt.Printf("💎 Found special card: **%s** - %s\n", card.Name, card.Description)
+				fmt.Printf("💾 **%s** added to your hand.\n", card.Name)
+			} else {
+				fmt.Println("💎 Found a special card!")
+			}
+		} else {
+			// No card found
+			fmt.Println("❌ Nothing useful found in this room.")
+		}
 	} else {
 		fmt.Println("✗ Cannot search this room.")
 	}
@@ -305,8 +333,50 @@ func (g *GameManager) executePlayCard(args []string) error {
 		return fmt.Errorf("usage: play <cardID>")
 	}
 	
-	// TODO: Implement card playing
-	return fmt.Errorf("card playing not yet implemented")
+	player := core.GetActivePlayer(g.state)
+	if player == nil {
+		return fmt.Errorf("no active player")
+	}
+	
+	if len(player.Hand) == 0 {
+		fmt.Println("✗ Your hand is empty!")
+		return nil
+	}
+	
+	cardID := core.CardID(args[0])
+	
+	// Check if card is in hand
+	found := false
+	for _, handCardID := range player.Hand {
+		if handCardID == cardID {
+			found = true
+			break
+		}
+	}
+	
+	if !found {
+		fmt.Printf("✗ Card %s not in your hand!\n", cardID)
+		return nil
+	}
+	
+	// Get card details for feedback
+	card, err := core.GetCard(cardID)
+	if err != nil {
+		fmt.Printf("✗ Unknown card: %s\n", cardID)
+		return nil
+	}
+	
+	// Execute play card action
+	action := core.PlayCardAction{
+		PlayerID: player.ID,
+		CardID:   cardID,
+	}
+	
+	newState := core.Apply(*g.state, action)
+	g.state = &newState
+	
+	fmt.Printf("✓ Played %s\n", card.Name)
+	return nil
 }
 
 func (g *GameManager) executeRoomAction() error {
