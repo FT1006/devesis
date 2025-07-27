@@ -34,7 +34,7 @@ func ApplySearch(state GameState, action SearchAction, rng *rand.Rand) GameState
 	randValue := rng.Float64()
 	if randValue > 0.4 && randValue < 0.8 {
 		// Add special card to hand
-		specialCard := Card{} // Empty card struct as per types.go
+		specialCard := CardID("SPECIAL_001") // TODO: Replace with actual card system
 		player.Hand = append(player.Hand, specialCard)
 	}
 	

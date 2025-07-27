@@ -54,7 +54,7 @@ func deepCopyGameState(state GameState) GameState {
 		Rooms:         make(map[RoomID]*RoomState),
 		Players:       make(map[PlayerID]*PlayerState),
 		Events:        make([]EventCard, len(state.Events)),
-		Bag:           make([]Token, len(state.Bag)),
+		SpawnBag:      nil,
 		Enemies:       make(map[EnemyID]*Enemy),
 		UsedQuestions: make([]int, len(state.UsedQuestions)),
 	}
@@ -81,9 +81,9 @@ func deepCopyGameState(state GameState) GameState {
 			MaxHP:        player.MaxHP,
 			Ammo:         player.Ammo,
 			MaxAmmo:      player.MaxAmmo,
-			Hand:         make([]Card, len(player.Hand)),
-			Deck:         make([]Card, len(player.Deck)),
-			Discard:      make([]Card, len(player.Discard)),
+			Hand:         make([]CardID, len(player.Hand)),
+			Deck:         make([]CardID, len(player.Deck)),
+			Discard:      make([]CardID, len(player.Discard)),
 			Location:     player.Location,
 			HasActed:     player.HasActed,
 			SpecialUsed:  player.SpecialUsed,
@@ -95,11 +95,18 @@ func deepCopyGameState(state GameState) GameState {
 		copy(newState.Players[id].Discard, player.Discard)
 	}
 	
-	// Copy events, bag, and used questions
+	// Copy events and used questions
 	copy(newState.Events, state.Events)
-	copy(newState.Bag, state.Bag)
 	copy(newState.UsedQuestions, state.UsedQuestions)
 	
+	// Deep copy spawn bag
+	if state.SpawnBag != nil {
+		newState.SpawnBag = &SpawnBag{
+			Tokens: make([]EnemyType, len(state.SpawnBag.Tokens)),
+		}
+		copy(newState.SpawnBag.Tokens, state.SpawnBag.Tokens)
+	}
+
 	// Copy enemies
 	for id, enemy := range state.Enemies {
 		newState.Enemies[id] = &Enemy{
@@ -125,7 +132,7 @@ func initializeGameState(seed int64, playerClass DevClass) GameState {
 		Rooms:         make(map[RoomID]*RoomState),
 		Players:       make(map[PlayerID]*PlayerState),
 		Events:        []EventCard{},
-		Bag:           []Token{},
+		SpawnBag:      initializeSpawnBag(),
 		Enemies:       make(map[EnemyID]*Enemy),
 		UsedQuestions: []int{},
 	}
@@ -164,9 +171,9 @@ func initializeGameState(seed int64, playerClass DevClass) GameState {
 		MaxHP:        classStats.HP,
 		Ammo:         classStats.MaxAmmo,
 		MaxAmmo:      classStats.MaxAmmo,
-		Hand:         []Card{},
-		Deck:         []Card{},
-		Discard:      []Card{},
+		Hand:         []CardID{},
+		Deck:         []CardID{},
+		Discard:      []CardID{},
 		Location:     "R12", // Start room
 		HasActed:     false,
 		SpecialUsed:  false,
@@ -259,4 +266,31 @@ func ValidateClassChoice(choiceID int) (DevClass, bool) {
 		}
 	}
 	return Frontend, false // Default fallback
+}
+
+// initializeSpawnBag creates the initial enemy spawn pool
+func initializeSpawnBag() *SpawnBag {
+	bag := &SpawnBag{
+		Tokens: []EnemyType{},
+	}
+
+	// Add enemy tokens based on difficulty distribution
+	// More weak enemies, fewer strong ones
+
+	// 10 Infinite Loops (weakest)
+	for i := 0; i < 10; i++ {
+		bag.Tokens = append(bag.Tokens, InfiniteLoop)
+	}
+
+	// 6 Stack Overflows (medium)
+	for i := 0; i < 6; i++ {
+		bag.Tokens = append(bag.Tokens, StackOverflow)
+	}
+
+	// 2 Pythogoras (strongest)
+	for i := 0; i < 2; i++ {
+		bag.Tokens = append(bag.Tokens, Pythogoras)
+	}
+
+	return bag
 }

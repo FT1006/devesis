@@ -9,7 +9,7 @@ type GameState struct {
 	Rooms         map[RoomID]*RoomState
 	Players       map[PlayerID]*PlayerState
 	Events        []EventCard
-	Bag           []Token
+	SpawnBag      *SpawnBag
 	Enemies       map[EnemyID]*Enemy
 	UsedQuestions []int // Track used question IDs
 }
@@ -31,9 +31,9 @@ type PlayerState struct {
 	MaxHP        uint8
 	Ammo         uint8
 	MaxAmmo      uint8
-	Hand         []Card
-	Deck         []Card
-	Discard      []Card
+	Hand         []CardID
+	Deck         []CardID
+	Discard      []CardID
 	Location     RoomID
 	HasActed     bool
 	SpecialUsed  bool
@@ -89,12 +89,18 @@ const (
 	PythagorasToken
 )
 
+// SpawnBag represents the enemy spawn pool
+type SpawnBag struct {
+	Tokens []EnemyType // Each entry is one spawn chance
+}
+
 type Coord struct {
 	Row, Col int
 }
 
 type EventCard struct{}
-type Card struct{}
+// Card reference - actual cards live in pkg/cards
+// Players hold CardIDs, cards are resolved when played
 
 type Question struct {
 	ID            int

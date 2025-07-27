@@ -109,7 +109,7 @@ func newSearchTestGameState() GameState {
 			"P1": {
 				ID:       "P1",
 				Location: "R12",
-				Hand:     []Card{{}, {}}, // 2 cards
+				Hand:     []CardID{"CARD_1", "CARD_2"}, // 2 cards
 				HP:       8,
 				MaxHP:    10,
 				Ammo:     3,

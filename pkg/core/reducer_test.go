@@ -64,7 +64,7 @@ func TestMoveActionToNonAdjacentRoomFails(t *testing.T) {
 
 func TestSearchActionMarksRoomSearched(t *testing.T) {
 	state := newTestGameState()
-	state.Players["P1"].Hand = []Card{{}, {}} // 2 cards
+	state.Players["P1"].Hand = []CardID{"CARD_1", "CARD_2"} // 2 cards
 	action := SearchAction{PlayerID: "P1"}
 	
 	result := Apply(state, action)
@@ -111,7 +111,7 @@ func newTestGameState() GameState {
 			"P1": {
 				ID:       "P1",
 				Location: "R12",
-				Hand:     []Card{{}, {}},
+				Hand:     []CardID{"CARD_1", "CARD_2"},
 			},
 		},
 		Enemies: map[EnemyID]*Enemy{},

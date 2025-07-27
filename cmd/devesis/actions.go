@@ -95,31 +95,32 @@ func (g *GameManager) applyWrongAnswerPenalties(targetRoom core.RoomID) error {
 	g.state = &newState
 	fmt.Printf("✓ You move to %s.\n", targetRoom)
 	
-	// 2. Add bugs to target room and all surrounding rooms
+	// 2. Show what rooms will be affected
 	roomsToInfect := []core.RoomID{targetRoom}
 	adjacent := core.GetAdjacentRooms(targetRoom)
 	roomsToInfect = append(roomsToInfect, adjacent...)
 	
 	fmt.Printf("💀 Bugs spread to %d rooms: ", len(roomsToInfect))
 	for i, roomID := range roomsToInfect {
-		if room := g.state.Rooms[roomID]; room != nil {
-			room.BugMarkers++
-			if i > 0 {
-				fmt.Print(", ")
-			}
-			fmt.Print(roomID)
+		if i > 0 {
+			fmt.Print(", ")
 		}
+		fmt.Print(roomID)
 	}
 	fmt.Println()
 	
-	// 3. Drop all cards from hand
+	// Count cards before penalty
 	player := core.GetActivePlayer(g.state)
-	if len(player.Hand) > 0 {
-		fmt.Printf("💸 You drop all %d cards from your hand!\n", len(player.Hand))
-		player.Hand = []core.Card{}
+	cardCount := len(player.Hand)
+	
+	// 3. Apply all penalties using core function (bugs, spawns, card drop)
+	core.ApplyWrongAnswerPenalties(g.state, targetRoom)
+	
+	// 4. Show feedback
+	if cardCount > 0 {
+		fmt.Printf("💸 You drop all %d cards from your hand!\n", cardCount)
 	}
 	
-	// 4. End turn immediately
 	fmt.Println("⏰ Your turn ends immediately due to the wrong answer.")
 	
 	return nil
