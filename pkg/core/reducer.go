@@ -1,5 +1,9 @@
 package core
 
+import (
+	"math/rand"
+)
+
 func Apply(state GameState, action Action) GameState {
 	switch a := action.(type) {
 	case InitializeGameAction:
@@ -56,7 +60,8 @@ func deepCopyGameState(state GameState) GameState {
 		Events:        make([]EventCard, len(state.Events)),
 		SpawnBag:      nil,
 		Enemies:       make(map[EnemyID]*Enemy),
-		UsedQuestions: make([]int, len(state.UsedQuestions)),
+		QuestionOrder: make([]int, len(state.QuestionOrder)),
+		NextQuestion:  state.NextQuestion,
 	}
 	
 	// Copy rooms
@@ -95,9 +100,9 @@ func deepCopyGameState(state GameState) GameState {
 		copy(newState.Players[id].Discard, player.Discard)
 	}
 	
-	// Copy events and used questions
+	// Copy events and question order
 	copy(newState.Events, state.Events)
-	copy(newState.UsedQuestions, state.UsedQuestions)
+	copy(newState.QuestionOrder, state.QuestionOrder)
 	
 	// Deep copy spawn bag
 	if state.SpawnBag != nil {
@@ -134,7 +139,9 @@ func initializeGameState(seed int64, playerClass DevClass) GameState {
 		Events:        []EventCard{},
 		SpawnBag:      initializeSpawnBag(),
 		Enemies:       make(map[EnemyID]*Enemy),
-		UsedQuestions: []int{},
+		// Initialize pre-shuffled question order
+		QuestionOrder: initializeQuestionOrder(seed),
+		NextQuestion:  0,
 	}
 
 	// Initialize all 20 rooms from the spaceship layout
@@ -293,4 +300,10 @@ func initializeSpawnBag() *SpawnBag {
 	}
 
 	return bag
+}
+
+// initializeQuestionOrder creates a pre-shuffled order of question IDs 0-49
+func initializeQuestionOrder(seed int64) []int {
+	rng := rand.New(rand.NewSource(seed))
+	return rng.Perm(50) // Creates [0,1,2,...,49] in random order
 }

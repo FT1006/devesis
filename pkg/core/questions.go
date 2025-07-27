@@ -1,53 +1,22 @@
 package core
 
-import (
-	"math/rand"
-)
 
-// GetRandomQuestion returns a random unused question and updates the game state
-func GetRandomQuestion(state GameState, seed int64) (Question, GameState) {
+// GetRandomQuestion returns the next question in the pre-shuffled order
+func GetRandomQuestion(state GameState) (Question, GameState) {
 	// Create a copy of the state to avoid mutations
-	newState := GameState{
-		Round:         state.Round,
-		Time:          state.Time,
-		RandSeed:      state.RandSeed,
-		EventIndex:    state.EventIndex,
-		Rooms:         state.Rooms,
-		Players:       state.Players,
-		Events:        state.Events,
-		Bag:           state.Bag,
-		Enemies:       state.Enemies,
-		UsedQuestions: make([]int, len(state.UsedQuestions)),
-	}
-	copy(newState.UsedQuestions, state.UsedQuestions)
-
-	// Find unused questions
-	usedMap := make(map[int]bool)
-	for _, id := range state.UsedQuestions {
-		usedMap[id] = true
-	}
-
-	var availableIDs []int
-	for i := 0; i < 50; i++ {
-		if !usedMap[i] {
-			availableIDs = append(availableIDs, i)
-		}
-	}
-
-	// If no questions available, return exhausted signal
-	if len(availableIDs) == 0 {
+	newState := deepCopyGameState(state)
+	
+	// Check if we've exhausted all questions
+	if newState.NextQuestion >= len(newState.QuestionOrder) {
 		return Question{ID: -1}, newState
 	}
-
-	// Use seed to select random question
-	rng := rand.New(rand.NewSource(seed))
-	selectedID := availableIDs[rng.Intn(len(availableIDs))]
-
-	// Mark question as used
-	newState.UsedQuestions = append(newState.UsedQuestions, selectedID)
-
-	// Return the selected question
-	question := getQuestionBank()[selectedID]
+	
+	// Get the next question ID from pre-shuffled order
+	questionID := newState.QuestionOrder[newState.NextQuestion]
+	newState.NextQuestion++
+	
+	// Return the question
+	question := getQuestionBank()[questionID]
 	return question, newState
 }
 

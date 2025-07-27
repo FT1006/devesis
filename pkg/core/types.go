@@ -11,7 +11,9 @@ type GameState struct {
 	Events        []EventCard
 	SpawnBag      *SpawnBag
 	Enemies       map[EnemyID]*Enemy
-	UsedQuestions []int // Track used question IDs
+	// Question system using pre-shuffle approach
+	QuestionOrder []int // Pre-shuffled order of question IDs 0-49
+	NextQuestion  int   // Index of next question to use
 }
 
 type RoomState struct {

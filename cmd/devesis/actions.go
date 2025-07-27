@@ -43,8 +43,8 @@ func (g *GameManager) executeMove(args []string) error {
 		}
 		
 		// Get a coding question before allowing movement to unexplored rooms
-		question, questionState := core.GetRandomQuestion(*g.state, g.state.RandSeed)
-		if question.ID == 0 {
+		question, questionState := core.GetRandomQuestion(*g.state)
+		if question.ID == -1 {
 			// No questions available, allow movement without question
 			fmt.Println("⚠ No questions available, movement allowed.")
 		} else {
