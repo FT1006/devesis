@@ -78,7 +78,7 @@ const (
 	Predefined RoomType = iota
 	AmmoCache
 	MedBay
-	CleanRoom
+	CleanRoomType
 	EnemySpawn
 	Empty
 )

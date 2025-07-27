@@ -1,11 +1,7 @@
-package effects
-
-import (
-	"github.com/spaceship/devesis/pkg/core"
-)
+package core
 
 // ApplyModifyBugs adds or removes bug markers from rooms
-func ApplyModifyBugs(state *core.GameState, effect Effect, playerID core.PlayerID) error {
+func ApplyModifyBugs(state *GameState, effect Effect, playerID PlayerID) error {
 	targets := getRoomTargets(state, effect.Scope, playerID)
 	for _, room := range targets {
 		if room.OutOfRam {
@@ -20,8 +16,8 @@ func ApplyModifyBugs(state *core.GameState, effect Effect, playerID core.PlayerI
 			if newBugCount < 0 {
 				newBugCount = 0
 			}
-			if newBugCount > core.MaxBugMarkers {
-				newBugCount = core.MaxBugMarkers
+			if newBugCount > MaxBugMarkers {
+				newBugCount = MaxBugMarkers
 			}
 			newBugs = uint8(newBugCount)
 		}
@@ -29,13 +25,13 @@ func ApplyModifyBugs(state *core.GameState, effect Effect, playerID core.PlayerI
 		room.BugMarkers = newBugs
 		
 		// Auto-corruption at 3+ bugs
-		room.Corrupted = newBugs >= core.BugCorruptionThreshold
+		room.Corrupted = newBugs >= BugCorruptionThreshold
 	}
 	return nil
 }
 
 // ApplyRevealRoom marks rooms as explored
-func ApplyRevealRoom(state *core.GameState, effect Effect, playerID core.PlayerID) error {
+func ApplyRevealRoom(state *GameState, effect Effect, playerID PlayerID) error {
 	targets := getRoomTargets(state, effect.Scope, playerID)
 	for _, room := range targets {
 		room.Explored = true
@@ -44,7 +40,7 @@ func ApplyRevealRoom(state *core.GameState, effect Effect, playerID core.PlayerI
 }
 
 // ApplyCleanRoom removes all bugs from rooms
-func ApplyCleanRoom(state *core.GameState, effect Effect, playerID core.PlayerID) error {
+func ApplyCleanRoom(state *GameState, effect Effect, playerID PlayerID) error {
 	targets := getRoomTargets(state, effect.Scope, playerID)
 	for _, room := range targets {
 		room.BugMarkers = 0
@@ -54,12 +50,12 @@ func ApplyCleanRoom(state *core.GameState, effect Effect, playerID core.PlayerID
 }
 
 // ApplySetCorrupted forces rooms into/out of corrupted state
-func ApplySetCorrupted(state *core.GameState, effect Effect, playerID core.PlayerID) error {
+func ApplySetCorrupted(state *GameState, effect Effect, playerID PlayerID) error {
 	targets := getRoomTargets(state, effect.Scope, playerID)
 	for _, room := range targets {
 		if effect.N == 1 {
 			room.Corrupted = true
-		} else if effect.N == 0 && room.BugMarkers < core.BugCorruptionThreshold {
+		} else if effect.N == 0 && room.BugMarkers < BugCorruptionThreshold {
 			room.Corrupted = false
 		}
 	}
@@ -67,7 +63,7 @@ func ApplySetCorrupted(state *core.GameState, effect Effect, playerID core.Playe
 }
 
 // getRoomTargets resolves which rooms are affected by the effect
-func getRoomTargets(state *core.GameState, scope ScopeType, playerID core.PlayerID) []*core.RoomState {
+func getRoomTargets(state *GameState, scope ScopeType, playerID PlayerID) []*RoomState {
 	player := state.Players[playerID]
 	if player == nil {
 		return nil
@@ -76,12 +72,12 @@ func getRoomTargets(state *core.GameState, scope ScopeType, playerID core.Player
 	switch scope {
 	case CurrentRoom:
 		if room := state.Rooms[player.Location]; room != nil {
-			return []*core.RoomState{room}
+			return []*RoomState{room}
 		}
 		return nil
 	case AdjacentRooms:
-		adjacentIDs := core.GetAdjacentRooms(player.Location)
-		targets := make([]*core.RoomState, 0, len(adjacentIDs))
+		adjacentIDs := GetAdjacentRooms(player.Location)
+		targets := make([]*RoomState, 0, len(adjacentIDs))
 		for _, roomID := range adjacentIDs {
 			if room := state.Rooms[roomID]; room != nil {
 				targets = append(targets, room)
@@ -89,15 +85,15 @@ func getRoomTargets(state *core.GameState, scope ScopeType, playerID core.Player
 		}
 		return targets
 	case AllRooms:
-		targets := make([]*core.RoomState, 0, len(state.Rooms))
+		targets := make([]*RoomState, 0, len(state.Rooms))
 		for _, room := range state.Rooms {
 			targets = append(targets, room)
 		}
 		return targets
 	case RoomWithMostBugs:
-		targetRoomID := core.GetRoomWithMostBugs(state)
+		targetRoomID := GetRoomWithMostBugs(state)
 		if room := state.Rooms[targetRoomID]; room != nil {
-			return []*core.RoomState{room}
+			return []*RoomState{room}
 		}
 		return nil
 	default:

@@ -1,31 +1,30 @@
-package effects
+package core
 
 import (
 	"fmt"
-	"github.com/spaceship/devesis/pkg/core"
 )
 
 // ApplySpawnEnemy creates new enemies in target locations  
-func ApplySpawnEnemy(state *core.GameState, effect Effect, playerID core.PlayerID) error {
+func ApplySpawnEnemy(state *GameState, effect Effect, playerID PlayerID) error {
 	targets := getRoomTargets(state, effect.Scope, playerID)
 	for _, room := range targets {
 		// Convert N to enemy type
-		var enemyType core.EnemyType
+		var enemyType EnemyType
 		switch effect.N {
 		case 1:
-			enemyType = core.InfiniteLoop
+			enemyType = InfiniteLoop
 		case 2:
-			enemyType = core.StackOverflow
+			enemyType = StackOverflow
 		case 3:
-			enemyType = core.Pythogoras
+			enemyType = Pythogoras
 		default:
 			return fmt.Errorf("invalid enemy type: %d", effect.N)
 		}
 		
 		// Create enemy directly (bypass spawn bag for special effects)
-		enemyID := core.EnemyID(fmt.Sprintf("E%d", len(state.Enemies)+1))
-		stats := core.ENEMY_STATS[enemyType]
-		enemy := &core.Enemy{
+		enemyID := EnemyID(fmt.Sprintf("E%d", len(state.Enemies)+1))
+		stats := ENEMY_STATS[enemyType]
+		enemy := &Enemy{
 			ID:       enemyID,
 			Type:     enemyType,
 			HP:       stats.HP,

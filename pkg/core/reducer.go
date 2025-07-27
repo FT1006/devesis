@@ -42,7 +42,39 @@ func Apply(state GameState, action Action) GameState {
 			player.Hand = player.Hand[:len(player.Hand)-1]
 		}
 		return newState
-	}
+		
+	case PlayCardAction:
+		// Deep copy the state to avoid mutations
+		newState := deepCopyGameState(state)
+		player, exists := newState.Players[a.PlayerID]
+		if !exists {
+			return newState
+		}
+
+		// Find and remove card from player's hand
+		cardIndex := -1
+		for i, cardID := range player.Hand {
+			if cardID == a.CardID {
+				cardIndex = i
+				break
+			}
+		}
+		
+		if cardIndex == -1 {
+			// Card not found in hand
+			return newState
+		}
+		
+		// Remove card from hand
+		player.Hand = append(player.Hand[:cardIndex], player.Hand[cardIndex+1:]...)
+		
+		// Apply card effects using the effects engine
+		if card, exists := CardDB[a.CardID]; exists {
+			newState = ApplyCardEffects(newState, card, a.PlayerID)
+		}
+		
+		return newState
+}
 	
 	// Default case - return original state unchanged
 	return state

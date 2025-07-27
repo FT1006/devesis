@@ -1,12 +1,11 @@
-package effects
+package core
 
 import (
 	"fmt"
-	"github.com/spaceship/devesis/pkg/core"
 )
 
 // ApplyModifyHP changes player health points
-func ApplyModifyHP(state *core.GameState, effect Effect, playerID core.PlayerID) error {
+func ApplyModifyHP(state *GameState, effect Effect, playerID PlayerID) error {
 	targets := getPlayerTargets(state, effect.Scope, playerID)
 	for _, player := range targets {
 		newHP := int(player.HP) + effect.N
@@ -22,7 +21,7 @@ func ApplyModifyHP(state *core.GameState, effect Effect, playerID core.PlayerID)
 }
 
 // ApplyModifyAmmo changes player ammunition
-func ApplyModifyAmmo(state *core.GameState, effect Effect, playerID core.PlayerID) error {
+func ApplyModifyAmmo(state *GameState, effect Effect, playerID PlayerID) error {
 	targets := getPlayerTargets(state, effect.Scope, playerID)
 	for _, player := range targets {
 		newAmmo := int(player.Ammo) + effect.N
@@ -38,13 +37,13 @@ func ApplyModifyAmmo(state *core.GameState, effect Effect, playerID core.PlayerI
 }
 
 // ApplyDrawCards draws cards from deck to hand
-func ApplyDrawCards(state *core.GameState, effect Effect, playerID core.PlayerID) error {
+func ApplyDrawCards(state *GameState, effect Effect, playerID PlayerID) error {
 	// TODO: Implement when deck system exists
 	return nil
 }
 
 // ApplyDiscardCards removes cards from hand
-func ApplyDiscardCards(state *core.GameState, effect Effect, playerID core.PlayerID) error {
+func ApplyDiscardCards(state *GameState, effect Effect, playerID PlayerID) error {
 	targets := getPlayerTargets(state, effect.Scope, playerID)
 	for _, player := range targets {
 		cardsToDiscard := effect.N
@@ -53,7 +52,7 @@ func ApplyDiscardCards(state *core.GameState, effect Effect, playerID core.Playe
 		}
 		// Remove random cards from hand
 		if cardsToDiscard > 0 {
-			newHand := make([]core.CardID, len(player.Hand)-cardsToDiscard)
+			newHand := make([]CardID, len(player.Hand)-cardsToDiscard)
 			copy(newHand, player.Hand[cardsToDiscard:])
 			player.Hand = newHand
 		}
@@ -62,7 +61,7 @@ func ApplyDiscardCards(state *core.GameState, effect Effect, playerID core.Playe
 }
 
 // ApplySkipQuestion allows bypassing movement questions
-func ApplySkipQuestion(state *core.GameState, effect Effect, playerID core.PlayerID) error {
+func ApplySkipQuestion(state *GameState, effect Effect, playerID PlayerID) error {
 	if effect.Scope != Self {
 		return fmt.Errorf("SkipQuestion only valid with Self scope")
 	}
@@ -75,15 +74,15 @@ func ApplySkipQuestion(state *core.GameState, effect Effect, playerID core.Playe
 }
 
 // getPlayerTargets resolves which players are affected by the effect
-func getPlayerTargets(state *core.GameState, scope ScopeType, playerID core.PlayerID) []*core.PlayerState {
+func getPlayerTargets(state *GameState, scope ScopeType, playerID PlayerID) []*PlayerState {
 	switch scope {
 	case Self:
 		if player := state.Players[playerID]; player != nil {
-			return []*core.PlayerState{player}
+			return []*PlayerState{player}
 		}
 		return nil
 	case AllPlayers:
-		targets := make([]*core.PlayerState, 0, len(state.Players))
+		targets := make([]*PlayerState, 0, len(state.Players))
 		for _, player := range state.Players {
 			targets = append(targets, player)
 		}

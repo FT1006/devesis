@@ -157,7 +157,7 @@ func (g *GameManager) getRoomTypeDisplay(room *core.RoomState) string {
 		return "AMO"
 	case core.MedBay:
 		return "MED"
-	case core.CleanRoom:
+	case core.CleanRoomType:
 		return "CLN"
 	case core.EnemySpawn:
 		return "SPN"

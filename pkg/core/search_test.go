@@ -82,7 +82,7 @@ func TestSearchAction_FailsToFindCard(t *testing.T) {
 
 func TestSearchAction_WorksInAnyRoomType(t *testing.T) {
 	// Test that search works regardless of room type
-	roomTypes := []RoomType{Empty, AmmoCache, MedBay, CleanRoom, EnemySpawn}
+	roomTypes := []RoomType{Empty, AmmoCache, MedBay, CleanRoomType, EnemySpawn}
 	
 	for _, roomType := range roomTypes {
 		state := newSearchTestGameState()

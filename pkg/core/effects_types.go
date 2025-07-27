@@ -1,4 +1,4 @@
-package effects
+package core
 
 // Magic number for "all"
 const ALL = -999

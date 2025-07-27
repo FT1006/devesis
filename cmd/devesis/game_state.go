@@ -19,6 +19,11 @@ func (g *GameManager) Initialize() error {
 	fmt.Println("Welcome to Devesis: Tutorial Hell!")
 	fmt.Println("Escape the corrupted spaceship before time runs out!\n")
 	
+	// Load card database
+	if err := core.LoadCards("./data"); err != nil {
+		return fmt.Errorf("failed to load cards: %w", err)
+	}
+	
 	// Get player class selection
 	playerClass, err := g.selectPlayerClass()
 	if err != nil {

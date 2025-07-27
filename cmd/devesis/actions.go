@@ -151,7 +151,7 @@ func (g *GameManager) getRoomTypeName(roomType core.RoomType) string {
 		return "Ammo Cache"
 	case core.MedBay:
 		return "Medical Bay"
-	case core.CleanRoom:
+	case core.CleanRoomType:
 		return "Clean Room"
 	case core.EnemySpawn:
 		return "Enemy Spawn"

@@ -1,13 +1,12 @@
-package effects
+package core
 
 import (
 	"testing"
-	"github.com/spaceship/devesis/pkg/core"
 )
 
 func TestApplyModifyHP_Self(t *testing.T) {
-	state := &core.GameState{
-		Players: map[core.PlayerID]*core.PlayerState{
+	state := &GameState{
+		Players: map[PlayerID]*PlayerState{
 			"P1": {
 				ID:    "P1",
 				HP:    5,
@@ -33,14 +32,14 @@ func TestApplyModifyHP_Self(t *testing.T) {
 }
 
 func TestApplyModifyBugs_CurrentRoom(t *testing.T) {
-	state := &core.GameState{
-		Players: map[core.PlayerID]*core.PlayerState{
+	state := &GameState{
+		Players: map[PlayerID]*PlayerState{
 			"P1": {
 				ID:       "P1",
 				Location: "R01",
 			},
 		},
-		Rooms: map[core.RoomID]*core.RoomState{
+		Rooms: map[RoomID]*RoomState{
 			"R01": {
 				ID:         "R01",
 				BugMarkers: 2,
