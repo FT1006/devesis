@@ -5,7 +5,7 @@ const (
 	MaxHandSize   = 6
 	MaxBugMarkers = 255
 
-	GridRows = 6
+	GridRows = 7
 	GridCols = 7
 
 	// Action costs
@@ -41,4 +41,25 @@ var PREDEFINED_ROOMS = map[string]RoomType{
 	"R18": Predefined, // Engine
 	"R19": Predefined, // Escape
 	"R20": Predefined, // Escape
+}
+
+// Class Stats: HP and Ammo capacity by developer class
+var CLASS_STATS = map[DevClass]struct {
+	HP       uint8
+	MaxAmmo  uint8
+}{
+	Frontend:  {HP: 5, MaxAmmo: 4},
+	Backend:   {HP: 3, MaxAmmo: 6},
+	DevOps:    {HP: 5, MaxAmmo: 5},
+	Fullstack: {HP: 4, MaxAmmo: 4},
+}
+
+// Enemy Stats: HP and attack damage by enemy type
+var ENEMY_STATS = map[EnemyType]struct {
+	HP     uint8
+	Damage uint8
+}{
+	InfiniteLoop:   {HP: 1, Damage: 1},
+	StackOverflow:  {HP: 3, Damage: 2},
+	Pythogoras:     {HP: 6, Damage: 3},
 }

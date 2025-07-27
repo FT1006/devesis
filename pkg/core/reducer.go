@@ -1,11 +1,14 @@
 package core
 
 func Apply(state GameState, action Action) GameState {
-	// Deep copy the state to avoid mutations
-	newState := deepCopyGameState(state)
-	
 	switch a := action.(type) {
+	case InitializeGameAction:
+		// Create initial game state - no deep copy needed
+		return initializeGameState(a.Seed, a.PlayerClass)
+
 	case MoveAction:
+		// Deep copy the state to avoid mutations
+		newState := deepCopyGameState(state)
 		player, exists := newState.Players[a.PlayerID]
 		if !exists {
 			return newState
@@ -15,8 +18,11 @@ func Apply(state GameState, action Action) GameState {
 		if CanMove(&newState, player.Location, a.To) {
 			player.Location = a.To
 		}
+		return newState
 		
 	case SearchAction:
+		// Deep copy the state to avoid mutations
+		newState := deepCopyGameState(state)
 		player, exists := newState.Players[a.PlayerID]
 		if !exists {
 			return newState
@@ -31,9 +37,11 @@ func Apply(state GameState, action Action) GameState {
 		if len(player.Hand) > 0 {
 			player.Hand = player.Hand[:len(player.Hand)-1]
 		}
+		return newState
 	}
 	
-	return newState
+	// Default case - return original state unchanged
+	return state
 }
 
 // Deep copy helper function
@@ -105,4 +113,150 @@ func deepCopyGameState(state GameState) GameState {
 	}
 	
 	return newState
+}
+
+// initializeGameState creates a fresh game state
+func initializeGameState(seed int64, playerClass DevClass) GameState {
+	state := GameState{
+		Round:         1,
+		Time:          0,
+		RandSeed:      seed,
+		EventIndex:    0,
+		Rooms:         make(map[RoomID]*RoomState),
+		Players:       make(map[PlayerID]*PlayerState),
+		Events:        []EventCard{},
+		Bag:           []Token{},
+		Enemies:       make(map[EnemyID]*Enemy),
+		UsedQuestions: []int{},
+	}
+
+	// Initialize all 20 rooms from the spaceship layout
+	for roomIDStr := range ROOM_POSITIONS {
+		roomID := RoomID(roomIDStr)
+		roomType := Empty
+		explored := false
+
+		// Check if this room has a predefined type
+		if predefinedType, exists := PREDEFINED_ROOMS[roomIDStr]; exists {
+			roomType = predefinedType
+			explored = true // Predefined rooms are already explored
+		}
+
+		state.Rooms[roomID] = &RoomState{
+			ID:         roomID,
+			Type:       roomType,
+			Explored:   explored,
+			Searched:   false, // No rooms are searched initially
+			Corrupted:  false,
+			OutOfRam:   false,
+			BugMarkers: 0,
+		}
+	}
+
+	// Initialize single player with class-specific stats
+	playerID := PlayerID("P1")
+	classStats := CLASS_STATS[playerClass]
+
+	state.Players[playerID] = &PlayerState{
+		ID:           playerID,
+		Class:        playerClass,
+		HP:           classStats.HP,
+		MaxHP:        classStats.HP,
+		Ammo:         classStats.MaxAmmo,
+		MaxAmmo:      classStats.MaxAmmo,
+		Hand:         []Card{},
+		Deck:         []Card{},
+		Discard:      []Card{},
+		Location:     "R12", // Start room
+		HasActed:     false,
+		SpecialUsed:  false,
+		PersonalObj:  ObjectiveID(""),
+		CorporateObj: ObjectiveID(""),
+	}
+
+	return state
+}
+
+// GetActivePlayer returns the currently active player (P1 for single player)
+func GetActivePlayer(state *GameState) *PlayerState {
+	if player, exists := state.Players["P1"]; exists {
+		return player
+	}
+	return nil
+}
+
+// IsGameOver checks if the game has ended
+func IsGameOver(state *GameState) bool {
+	// Check time limit
+	if state.Round >= MaxRounds {
+		return true
+	}
+
+	// Check if all players are dead
+	for _, player := range state.Players {
+		if player.HP > 0 {
+			return false // At least one player alive
+		}
+	}
+
+	return true // All players dead
+}
+
+// ClassOption represents a selectable developer class
+type ClassOption struct {
+	ID          int
+	Class       DevClass
+	DisplayName string
+	HP          uint8
+	MaxAmmo     uint8
+	Description string
+}
+
+// GetAvailableClasses returns all selectable developer classes with their stats
+func GetAvailableClasses() []ClassOption {
+	return []ClassOption{
+		{
+			ID:          1,
+			Class:       Frontend,
+			DisplayName: "Frontend",
+			HP:          CLASS_STATS[Frontend].HP,
+			MaxAmmo:     CLASS_STATS[Frontend].MaxAmmo,
+			Description: "Balanced survivability",
+		},
+		{
+			ID:          2,
+			Class:       Backend,
+			DisplayName: "Backend",
+			HP:          CLASS_STATS[Backend].HP,
+			MaxAmmo:     CLASS_STATS[Backend].MaxAmmo,
+			Description: "High firepower, low health",
+		},
+		{
+			ID:          3,
+			Class:       DevOps,
+			DisplayName: "DevOps",
+			HP:          CLASS_STATS[DevOps].HP,
+			MaxAmmo:     CLASS_STATS[DevOps].MaxAmmo,
+			Description: "Well-rounded specialist",
+		},
+		{
+			ID:          4,
+			Class:       Fullstack,
+			DisplayName: "Fullstack",
+			HP:          CLASS_STATS[Fullstack].HP,
+			MaxAmmo:     CLASS_STATS[Fullstack].MaxAmmo,
+			Description: "Jack of all trades",
+		},
+	}
+}
+
+// ValidateClassChoice validates a class selection ID and returns the DevClass
+func ValidateClassChoice(choiceID int) (DevClass, bool) {
+	classes := GetAvailableClasses()
+	for _, class := range classes {
+		if class.ID == choiceID {
+			return class.Class, true
+		}
+	}
+	return Frontend, false // Default fallback
 }

@@ -55,3 +55,10 @@ type PassAction struct {
 }
 
 func (PassAction) isAction() {}
+
+type InitializeGameAction struct {
+	Seed        int64
+	PlayerClass DevClass
+}
+
+func (InitializeGameAction) isAction() {}
