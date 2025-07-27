@@ -2,6 +2,7 @@ package core
 
 import (
 	"math/rand"
+	"strings"
 )
 
 // ApplySearch implements the search action mechanics
@@ -33,10 +34,67 @@ func ApplySearch(state GameState, action SearchAction, rng *rand.Rand) GameState
 	// Using threshold analysis: seed 1 (0.604660) succeeds, seed 42 (0.373028) and 100 (0.816503) fail
 	randValue := rng.Float64()
 	if randValue > 0.4 && randValue < 0.8 {
-		// Add special card to hand
-		specialCard := CardID("SPECIAL_001") // TODO: Replace with actual card system
-		player.Hand = append(player.Hand, specialCard)
+		// Select random special card from available cards
+		specialCard := selectRandomSpecialCard(rng)
+		if specialCard != "" {
+			player.Hand = append(player.Hand, specialCard)
+		}
 	}
 	
 	return newState
+}
+
+// selectRandomSpecialCard picks a random special card from the loaded database
+func selectRandomSpecialCard(rng *rand.Rand) CardID {
+	// Collect all special card IDs from the database
+	var specialCards []CardID
+	for cardID, card := range CardDB {
+		// Check if it's a special card by ID prefix
+		if strings.HasPrefix(string(cardID), "SPECIAL") {
+			// Get rarity from card data
+			rarity := getCardRarity(card)
+			
+			// Add card multiple times based on rarity (common cards more likely)
+			switch rarity {
+			case "common":
+				for i := 0; i < 3; i++ {
+					specialCards = append(specialCards, cardID)
+				}
+			case "uncommon":
+				for i := 0; i < 2; i++ {
+					specialCards = append(specialCards, cardID)
+				}
+			case "rare":
+				specialCards = append(specialCards, cardID)
+			default:
+				// Default to uncommon weighting
+				for i := 0; i < 2; i++ {
+					specialCards = append(specialCards, cardID)
+				}
+			}
+		}
+	}
+	
+	// Return empty if no special cards available
+	if len(specialCards) == 0 {
+		return ""
+	}
+	
+	// Pick random card from weighted list
+	randomIndex := rng.Intn(len(specialCards))
+	return specialCards[randomIndex]
+}
+
+// getCardRarity extracts rarity from card data, with fallback to effect-count heuristic
+func getCardRarity(card Card) string {
+	// TODO: Use card.Rarity field when YAML parsing supports it
+	// For now, infer rarity from effects complexity
+	switch n := len(card.Effects); {
+	case n >= 3:
+		return "rare"
+	case n >= 2:
+		return "uncommon"
+	default:
+		return "common"
+	}
 }
