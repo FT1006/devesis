@@ -1,0 +1,94 @@
+package effects
+
+import (
+	"fmt"
+	"github.com/spaceship/devesis/pkg/core"
+)
+
+// ApplyModifyHP changes player health points
+func ApplyModifyHP(state *core.GameState, effect Effect, playerID core.PlayerID) error {
+	targets := getPlayerTargets(state, effect.Scope, playerID)
+	for _, player := range targets {
+		newHP := int(player.HP) + effect.N
+		if newHP < 0 {
+			newHP = 0
+		}
+		if newHP > int(player.MaxHP) {
+			newHP = int(player.MaxHP)
+		}
+		player.HP = uint8(newHP)
+	}
+	return nil
+}
+
+// ApplyModifyAmmo changes player ammunition
+func ApplyModifyAmmo(state *core.GameState, effect Effect, playerID core.PlayerID) error {
+	targets := getPlayerTargets(state, effect.Scope, playerID)
+	for _, player := range targets {
+		newAmmo := int(player.Ammo) + effect.N
+		if newAmmo < 0 {
+			newAmmo = 0
+		}
+		if newAmmo > int(player.MaxAmmo) {
+			newAmmo = int(player.MaxAmmo)
+		}
+		player.Ammo = uint8(newAmmo)
+	}
+	return nil
+}
+
+// ApplyDrawCards draws cards from deck to hand
+func ApplyDrawCards(state *core.GameState, effect Effect, playerID core.PlayerID) error {
+	// TODO: Implement when deck system exists
+	return nil
+}
+
+// ApplyDiscardCards removes cards from hand
+func ApplyDiscardCards(state *core.GameState, effect Effect, playerID core.PlayerID) error {
+	targets := getPlayerTargets(state, effect.Scope, playerID)
+	for _, player := range targets {
+		cardsToDiscard := effect.N
+		if cardsToDiscard > len(player.Hand) {
+			cardsToDiscard = len(player.Hand)
+		}
+		// Remove random cards from hand
+		if cardsToDiscard > 0 {
+			newHand := make([]core.CardID, len(player.Hand)-cardsToDiscard)
+			copy(newHand, player.Hand[cardsToDiscard:])
+			player.Hand = newHand
+		}
+	}
+	return nil
+}
+
+// ApplySkipQuestion allows bypassing movement questions
+func ApplySkipQuestion(state *core.GameState, effect Effect, playerID core.PlayerID) error {
+	if effect.Scope != Self {
+		return fmt.Errorf("SkipQuestion only valid with Self scope")
+	}
+	player := state.Players[playerID]
+	if player != nil {
+		// TODO: Add skip counter to player struct
+		// player.QuestionSkips += effect.N
+	}
+	return nil
+}
+
+// getPlayerTargets resolves which players are affected by the effect
+func getPlayerTargets(state *core.GameState, scope ScopeType, playerID core.PlayerID) []*core.PlayerState {
+	switch scope {
+	case Self:
+		if player := state.Players[playerID]; player != nil {
+			return []*core.PlayerState{player}
+		}
+		return nil
+	case AllPlayers:
+		targets := make([]*core.PlayerState, 0, len(state.Players))
+		for _, player := range state.Players {
+			targets = append(targets, player)
+		}
+		return targets
+	default:
+		return nil
+	}
+}
