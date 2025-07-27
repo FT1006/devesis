@@ -3,7 +3,8 @@ package core
 const (
 	MaxRounds     = 15
 	MaxHandSize   = 6
-	MaxBugMarkers = 255
+	MaxBugMarkers = 9  // Max bugs per room
+	BugCorruptionThreshold = 3  // Rooms corrupt at 3+ bugs
 
 	GridRows = 7
 	GridCols = 7
@@ -60,6 +61,6 @@ var ENEMY_STATS = map[EnemyType]struct {
 	Damage uint8
 }{
 	InfiniteLoop:   {HP: 1, Damage: 1},
-	StackOverflow:  {HP: 3, Damage: 2},
-	Pythogoras:     {HP: 6, Damage: 3},
+	StackOverflow:  {HP: 3, Damage: 1},
+	Pythogoras:     {HP: 6, Damage: 1},
 }
