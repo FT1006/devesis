@@ -222,9 +222,9 @@ func initializeGameState(seed int64, playerClass DevClass) GameState {
 	return state
 }
 
-// GetActivePlayer returns the currently active player (P1 for single player)
+// GetActivePlayer returns the currently active player
 func GetActivePlayer(state *GameState) *PlayerState {
-	if player, exists := state.Players["P1"]; exists {
+	if player, exists := state.Players[state.ActivePlayer]; exists {
 		return player
 	}
 	return nil
