@@ -37,12 +37,53 @@ func (g *GameManager) showMap() error {
 	return nil
 }
 
+// renderMapWithLegend renders the map with a legend for turn beginning
+func (g *GameManager) renderMapWithLegend() string {
+	var result strings.Builder
+	
+	// Add map
+	result.WriteString(g.renderMap())
+	result.WriteString("\n")
+	
+	// Count key statistics
+	totalBugs := 0
+	corruptedRooms := 0
+	enemyCount := map[core.EnemyType]int{}
+	
+	for _, room := range g.state.Rooms {
+		totalBugs += int(room.BugMarkers)
+		if room.Corrupted {
+			corruptedRooms++
+		}
+	}
+	
+	for _, enemy := range g.state.Enemies {
+		enemyCount[enemy.Type]++
+	}
+	
+	// Add statistics bar
+	result.WriteString("╔════════════════════════════════════════════════════════════════════════╗\n")
+	result.WriteString(fmt.Sprintf("║ 🐛 Total Bugs: %-3d  💀 Corrupted: %-2d  👹 Enemies: IL:%d SO:%d PY:%d        ║\n",
+		totalBugs, corruptedRooms, 
+		enemyCount[core.InfiniteLoop], enemyCount[core.StackOverflow], enemyCount[core.Pythogoras]))
+	result.WriteString("╚════════════════════════════════════════════════════════════════════════╝\n\n")
+	
+	// Add legend
+	result.WriteString("🗺️  MAP LEGEND:\n")
+	result.WriteString("• Rooms: [ID,±,B] = [Room ID, Searched(+/-), Bug count]\n")
+	result.WriteString("• Types: KEY=Key STR=Start EN#=Engine ESC=Escape\n")
+	result.WriteString("         AMO=Ammo MED=Medical CLN=Clean AIR=Air SPN=Spawn\n")
+	result.WriteString("• Units: P#=Player IL=Infinite Loop SO=Stack Overflow PY=Pythogoras\n")
+	result.WriteString("• Status: XXX=Corrupted room (3+ bugs)\n")
+	
+	return result.String()
+}
+
 func (g *GameManager) renderMap() string {
 	var result strings.Builder
 	overflowRooms := make(map[core.RoomID][]string)
 	
-	// Header row  
-	result.WriteString("   A            B            C            D            E            F            G\n")
+	// No header row - remove column labels to prevent grid coordinates
 	
 	// Render each row
 	for row := 0; row < core.GridRows; row++ {
@@ -62,6 +103,12 @@ func (g *GameManager) renderMap() string {
 		for roomID, objects := range overflowRooms {
 			result.WriteString(fmt.Sprintf("%s: %s\n", roomID, strings.Join(objects, ",")))
 		}
+	}
+	
+	// Add R20 escape room info (normally in column G)
+	r20Room := g.state.Rooms["R20"]
+	if r20Room != nil {
+		result.WriteString(fmt.Sprintf("\n[R20 Escape Room]: %s\n", g.formatRoomStatus(r20Room)))
 	}
 	
 	// Add mini-guide with examples
@@ -90,11 +137,12 @@ func (g *GameManager) formatGridCell(content string) string {
 func (g *GameManager) renderGridRow(row int, overflowRooms map[core.RoomID][]string) (string, string, string) {
 	var line1, line2, line3 strings.Builder
 	
-	line1.WriteString(fmt.Sprintf("%d ", row+1))
-	line2.WriteString("  ")
-	line3.WriteString("  ")
+	// No row numbers - remove to prevent grid coordinates
+	line1.WriteString("")
+	line2.WriteString("")
+	line3.WriteString("")
 	
-	for col := 0; col < core.GridCols; col++ {
+	for col := 0; col < 6; col++ { // Only show columns A-F (0-5)
 		roomID := g.findRoomAt(row, col)
 		
 		if roomID == "" {
@@ -224,6 +272,23 @@ func (g *GameManager) getEnemyAbbrev(enemyType core.EnemyType) string {
 		return "PY"
 	default:
 		return "??"
+	}
+}
+
+// formatRoomStatus formats room status for separate display
+func (g *GameManager) formatRoomStatus(room *core.RoomState) string {
+	searchStatus := "+"
+	if room.Searched {
+		searchStatus = "-"
+	}
+	
+	roomType := g.getRoomTypeDisplay(room)
+	contents := g.formatGridContents(room, make(map[core.RoomID][]string))
+	
+	if contents == "" {
+		return fmt.Sprintf("[%s,%s,%d] %s", room.ID, searchStatus, room.BugMarkers, roomType)
+	} else {
+		return fmt.Sprintf("[%s,%s,%d] %s - %s", room.ID, searchStatus, room.BugMarkers, roomType, contents)
 	}
 }
 

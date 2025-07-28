@@ -344,7 +344,11 @@ func (g *GameManager) ExecutePlayerPhase(reader *bufio.Reader) error {
 	fmt.Printf("\n=== PLAYER PHASE ===\n")
 	fmt.Printf("Actions remaining: %d\n", g.state.ActionsLeft)
 	
-	// Initial display: Hand + Status + Prompt
+	// Display the game map first for better situational awareness
+	fmt.Println("\n📍 CURRENT MAP STATE:")
+	fmt.Println(g.renderMapWithLegend())
+	
+	// Initial display: Status + Hand + Prompt
 	g.DisplayStatus()
 	g.DisplayHand()
 	g.DisplayPrompt()
