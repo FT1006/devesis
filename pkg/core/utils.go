@@ -103,8 +103,8 @@ func getEffectOpName(op EffectOp) string {
 		return "DrawCards"
 	case DiscardCards:
 		return "DiscardCards"
-	case SkipQuestion:
-		return "SkipQuestion"
+	case OutOfRam:
+		return "OutOfRam"
 	case ModifyBugs:
 		return "ModifyBugs"
 	case RevealRoom:
@@ -135,11 +135,127 @@ func getScopeName(scope ScopeType) string {
 		return "AllRooms"
 	case RoomWithMostBugs:
 		return "RoomWithMostBugs"
+	case RoomWithMostEnemies:
+		return "RoomWithMostEnemies"
 	case AllPlayers:
 		return "AllPlayers"
 	default:
 		return "Unknown"
 	}
+}
+
+// selectRoomWithTieBreaking selects the best room from candidates using pathfinding-based tie-breaking
+// Returns the room closest to the active player's position in case of ties
+func selectRoomWithTieBreaking(state *GameState, candidates []RoomID) RoomID {
+	if len(candidates) == 0 {
+		return ""
+	}
+	if len(candidates) == 1 {
+		return candidates[0]
+	}
+	
+	// Use active player's current position as anchor for tie-breaking
+	anchor := state.Players[state.ActivePlayer].Location
+	
+	best := candidates[0]
+	bestDistance := 999
+	
+	// Find the room closest to active player
+	for _, roomID := range candidates {
+		path := CanTraverse(state, PathQuery{From: roomID, To: anchor, MaxSteps: 0})
+		distance := 999
+		if path.Valid {
+			distance = len(path.Path) - 1
+		}
+		
+		if distance < bestDistance {
+			best = roomID
+			bestDistance = distance
+		}
+	}
+	
+	return best
+}
+
+// GetRoomWithMostBugs finds the room with highest bug count for bug-related effects
+// Returns empty string if no rooms have bugs (> 0)
+func GetRoomWithMostBugs(state *GameState) RoomID {
+	return getRoomWithMostBugs(state, true)
+}
+
+// GetRoomWithMostBugsForSpawn finds the room with highest bug count for enemy spawning
+// Returns a room even if it has 0 bugs (fallback to closest to active player)
+func GetRoomWithMostBugsForSpawn(state *GameState) RoomID {
+	return getRoomWithMostBugs(state, false)
+}
+
+// getRoomWithMostBugs is a helper that finds the room with highest bug count
+// Returns empty string if requireBugs is true and no rooms have bugs (> 0)
+// In case of ties, returns the room closest to active player's position using actual pathfinding
+func getRoomWithMostBugs(state *GameState, requireBugs bool) RoomID {
+	minBugs := 0
+	if requireBugs {
+		minBugs = 1 // Must have at least 1 bug to be considered
+	}
+	
+	maxBugs := minBugs - 1 // Start below minimum
+	var candidates []RoomID
+	
+	for id, room := range state.Rooms {
+		bugs := int(room.BugMarkers)
+		
+		if bugs < minBugs {
+			continue // Below minimum threshold
+		}
+		
+		if bugs > maxBugs {
+			// Found room(s) with more bugs - reset candidates
+			maxBugs = bugs
+			candidates = []RoomID{id}
+		} else if bugs == maxBugs {
+			// Tie - add to candidates
+			candidates = append(candidates, id)
+		}
+	}
+	
+	// Return empty if requireBugs and no rooms have bugs
+	if requireBugs && maxBugs < minBugs {
+		return ""
+	}
+	
+	// Use tie-breaking helper to select from candidates
+	return selectRoomWithTieBreaking(state, candidates)
+}
+
+// GetRoomWithMostEnemies finds the room with highest enemy count for OutOfRam effects
+// Returns empty string if no enemies exist
+func GetRoomWithMostEnemies(state *GameState) RoomID {
+	// Count enemies per room
+	enemyCount := make(map[RoomID]int)
+	for _, enemy := range state.Enemies {
+		enemyCount[enemy.Location]++
+	}
+	
+	if len(enemyCount) == 0 {
+		return "" // No enemies exist
+	}
+	
+	maxEnemies := 0
+	var candidates []RoomID
+	
+	for roomID, count := range enemyCount {
+		if count > maxEnemies {
+			// Found room(s) with more enemies - reset candidates
+			maxEnemies = count
+			candidates = []RoomID{roomID}
+		} else if count == maxEnemies {
+			// Tie - add to candidates
+			candidates = append(candidates, roomID)
+		}
+	}
+	
+	// Use tie-breaking helper to select from candidates
+	return selectRoomWithTieBreaking(state, candidates)
 }
 
 // drawCards draws up to `count` cards from deck to hand, handling deck reshuffling
