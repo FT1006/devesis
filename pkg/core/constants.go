@@ -49,10 +49,10 @@ var CLASS_STATS = map[DevClass]struct {
 	HP       uint8
 	MaxAmmo  uint8
 }{
-	Frontend:  {HP: 5, MaxAmmo: 4},
+	Frontend:  {HP: 6, MaxAmmo: 3},
 	Backend:   {HP: 3, MaxAmmo: 6},
-	DevOps:    {HP: 5, MaxAmmo: 5},
-	Fullstack: {HP: 4, MaxAmmo: 4},
+	DevOps:    {HP: 4, MaxAmmo: 5},
+	Fullstack: {HP: 5, MaxAmmo: 4},
 }
 
 // Enemy Stats: HP and attack damage by enemy type
