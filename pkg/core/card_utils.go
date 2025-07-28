@@ -70,6 +70,14 @@ func shuffleRooms(rooms []RoomID, rng *rand.Rand) {
 	}
 }
 
+// shuffleRoomTypes shuffles a slice of RoomTypes using Fisher-Yates algorithm
+func shuffleRoomTypes(roomTypes []RoomType, rng *rand.Rand) {
+	for i := len(roomTypes) - 1; i > 0; i-- {
+		j := rng.Intn(i + 1)
+		roomTypes[i], roomTypes[j] = roomTypes[j], roomTypes[i]
+	}
+}
+
 // drawCards draws up to `count` cards from deck to hand, handling deck reshuffling
 // Returns the number of cards actually drawn
 func drawCards(hand *[]CardID, deck *[]CardID, discard *[]CardID, count int, rng *rand.Rand) int {

@@ -300,6 +300,23 @@ func initializeGameState(seed int64, playerClass DevClass) GameState {
 	}
 
 	// Initialize all 20 rooms from the spaceship layout
+	// Create room type distribution for non-predefined rooms
+	roomTypePool := []RoomType{
+		AmmoCache, AmmoCache, AmmoCache,        // 3 AmmoCache
+		MedBay, MedBay, MedBay,                 // 3 MedBay  
+		CleanRoomType,                          // 1 CleanRoomType
+		EnemySpawn, EnemySpawn, EnemySpawn, EnemySpawn, // 4 EnemySpawn
+		Empty, Empty,                           // 2 Empty
+	}
+	
+	// Use game RNG for consistent room assignment
+	tempState := GameState{RandSeed: seed, Round: 1, Time: 15}
+	rng := GetGameRNG(&tempState)
+	
+	// Shuffle the room type pool for random assignment
+	shuffleRoomTypes(roomTypePool, rng)
+	
+	poolIndex := 0
 	for roomIDStr := range ROOM_POSITIONS {
 		roomID := RoomID(roomIDStr)
 		roomType := Empty
@@ -309,6 +326,10 @@ func initializeGameState(seed int64, playerClass DevClass) GameState {
 		if predefinedType, exists := PREDEFINED_ROOMS[roomIDStr]; exists {
 			roomType = predefinedType
 			explored = true // Predefined rooms are already explored
+		} else {
+			// Assign from shuffled pool
+			roomType = roomTypePool[poolIndex]
+			poolIndex++
 		}
 
 		state.Rooms[roomID] = &RoomState{
