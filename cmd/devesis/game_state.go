@@ -86,16 +86,169 @@ func (g *GameManager) IsGameOver() bool {
 }
 
 func (g *GameManager) DisplayStatus() {
-	// Basic status display - will be replaced with ASCII renderer
 	player := core.GetActivePlayer(g.state)
 	if player == nil {
 		return
 	}
 	
+	// Display hand first
+	g.displayHandStatus(player)
+	
+	// Then display bordered status panel
+	g.displayStatusPanel(player)
+	
+	// Finally display command help
 	fmt.Printf("\n[ACTIONS] move(mv) play(c) search(s) shoot(f) melee(ml) room(ra) pass(p)\n")
-	fmt.Printf("[INFO] hand(h) map(mp) status(st) help(?) quit(q)\n")
-	fmt.Printf("Round %d | HP %d/%d | Ammo %d/%d | Location: %s\n",
-		g.state.Round, player.HP, player.MaxHP, player.Ammo, player.MaxAmmo, player.Location)
+	fmt.Printf("[INFO] hand(h) map(mp) status(st) help(?) quit/exit(q)\n")
+}
+
+func (g *GameManager) displayHandStatus(player *core.PlayerState) {
+	fmt.Printf("\nHand (%d cards):\n", len(player.Hand))
+	if len(player.Hand) == 0 {
+		fmt.Println("  (empty)")
+	} else {
+		for i, cardID := range player.Hand {
+			if card, exists := core.CardDB[cardID]; exists {
+				fmt.Printf("  %d. %s - %s\n", i+1, card.Name, card.Description)
+			} else {
+				fmt.Printf("  %d. %s (unknown card)\n", i+1, cardID)
+			}
+		}
+	}
+}
+
+func (g *GameManager) displayStatusPanel(player *core.PlayerState) {
+	// Get room info
+	room := g.state.Rooms[player.Location]
+	roomType := ""
+	searchStatus := ""
+	
+	if room != nil {
+		if room.Searched {
+			searchStatus = "searched"
+		} else {
+			searchStatus = "not searched"  
+		}
+		roomType = g.getRoomTypeDisplayName(room)
+	}
+	
+	// Count enemies in room
+	loopCount := 0
+	overflowCount := 0 
+	pythogorasCount := 0
+	for _, enemy := range g.state.Enemies {
+		if enemy.Location == player.Location {
+			switch enemy.Type {
+			case core.InfiniteLoop:
+				loopCount++
+			case core.StackOverflow:
+				overflowCount++
+			case core.Pythogoras:
+				pythogorasCount++
+			}
+		}
+	}
+	
+	// Calculate rounds left
+	roundsLeft := core.MaxRounds - g.state.Round
+	if roundsLeft < 0 {
+		roundsLeft = 0
+	}
+	
+	// Corruption status
+	corruptedStatus := "✘"
+	if room != nil && room.Corrupted {
+		corruptedStatus = "✓"
+	}
+	
+	// Get class name
+	className := g.getClassDisplayName(player.Class)
+	
+	// Fixed width panel (70 characters total)
+	const panelWidth = 70
+	
+	// Build the bordered panel
+	topBorder := fmt.Sprintf("┌─────────────── P1 %s ── Room %s (%s, %s) ", 
+		className, player.Location, roomType, searchStatus)
+	topPadding := panelWidth - len(topBorder) - 1
+	if topPadding > 0 {
+		topBorder += strings.Repeat("─", topPadding)
+	}
+	topBorder += "┐"
+	
+	line1 := fmt.Sprintf("│ HP   %2d / %2d     Ammo %2d / %2d        Cards  Hand:%d  Deck:%d  Disc:%d",
+		player.HP, player.MaxHP, player.Ammo, player.MaxAmmo, 
+		len(player.Hand), len(player.Deck), len(player.Discard))
+	line1 = g.padLine(line1, panelWidth)
+	
+	line2 := fmt.Sprintf("│ Turn   Actions %d / 2", g.state.ActionsLeft)
+	line2 = g.padLine(line2, panelWidth)
+	
+	line3 := fmt.Sprintf("│ Room   Bugs:%d   Loop:%d   Overflow:%d   Pythogoras:%d   Corrupted: %s",
+		room.BugMarkers, loopCount, overflowCount, pythogorasCount, corruptedStatus)
+	line3 = g.padLine(line3, panelWidth)
+	
+	line4 := fmt.Sprintf("│ Game   Round: %d      Rounds left: %d", 
+		g.state.Round, roundsLeft)
+	line4 = g.padLine(line4, panelWidth)
+	
+	bottomBorder := "└" + strings.Repeat("─", panelWidth-2) + "┘"
+	
+	// Print the panel
+	fmt.Printf("\n%s\n", topBorder)
+	fmt.Printf("%s\n", line1)  
+	fmt.Printf("%s\n", line2)
+	fmt.Printf("%s\n", line3)
+	fmt.Printf("%s\n", line4)
+	fmt.Printf("%s\n", bottomBorder)
+}
+
+func (g *GameManager) padLine(line string, targetWidth int) string {
+	padding := targetWidth - len(line) - 1
+	if padding < 0 {
+		// Line is too long, truncate it
+		maxContent := targetWidth - 3 // "│" + content + "│"
+		if maxContent > 0 {
+			line = line[:maxContent] + "…"
+		}
+		padding = 0
+	}
+	return line + strings.Repeat(" ", padding) + "│"
+}
+
+func (g *GameManager) getRoomDisplayName(roomID core.RoomID) string {
+	// Simple mapping for room names
+	roomNames := map[string]string{
+		"R01": "Key", "R02": "Store", "R03": "Comp",
+		"R04": "Crew", "R05": "Lab", "R06": "Sys", 
+		"R07": "Air", "R08": "Power", "R09": "Maint",
+		"R10": "Cache", "R11": "Cache", "R12": "Start",
+		"R13": "Data", "R14": "Log", "R15": "Engine",
+		"R16": "Gen", "R17": "Engine", "R18": "Engine", 
+		"R19": "Escape", "R20": "Escape",
+	}
+	
+	if name, exists := roomNames[string(roomID)]; exists {
+		return name
+	}
+	return string(roomID)
+}
+
+func (g *GameManager) getRoomTypeDisplayName(room *core.RoomState) string {
+	switch room.Type {
+	case core.AmmoCache:
+		return "ammo cache"
+	case core.MedBay:
+		return "med bay"
+	case core.CleanRoomType:
+		return "clean room"
+	case core.EnemySpawn:
+		return "enemy spawn"
+	case core.Empty:
+		return "air circulation"
+	default:
+		return "unknown"
+	}
 }
 
 func (g *GameManager) DisplayGameOver() {

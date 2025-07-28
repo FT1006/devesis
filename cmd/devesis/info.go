@@ -17,8 +17,12 @@ func (g *GameManager) showHand() error {
 	if len(player.Hand) == 0 {
 		fmt.Println("  (empty)")
 	} else {
-		for i, card := range player.Hand {
-			fmt.Printf("  %d. %v\n", i+1, card) // TODO: Proper card display
+		for i, cardID := range player.Hand {
+			if card, exists := core.CardDB[cardID]; exists {
+				fmt.Printf("  %d. %s - %s\n", i+1, card.Name, card.Description)
+			} else {
+				fmt.Printf("  %d. %s (unknown card)\n", i+1, cardID)
+			}
 		}
 	}
 	
