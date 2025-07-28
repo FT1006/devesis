@@ -68,29 +68,56 @@ func ApplyMoveEnemies(state *GameState, effect Effect, playerID PlayerID, log *E
 	moved := 0
 
 	for _, enemy := range state.Enemies {
-		// 1️⃣ Find shortest path to ANY living player (no step limit)
-		bestPath := PathResult{} // PathResult{Valid bool, Path []RoomID}
-		bestLen := 999           // Use large number instead of math.MaxInt for simplicity
+		var bestPath PathResult
+		var bestLen int
+		var targetType string
 
-		for _, player := range state.Players {
-			if player.HP == 0 {
-				continue // Skip dead players
+		// Pythogoras (boss) moves toward escape rooms instead of players
+		if enemy.Type == Pythogoras {
+			bestPath = PathResult{}
+			bestLen = 999
+			targetType = "escape room"
+			
+			// Find shortest path to either escape room (R19 or R20)
+			escapeRooms := []RoomID{"R19", "R20"}
+			for _, escapeRoom := range escapeRooms {
+				path := CanTraverse(state, PathQuery{
+					From:     enemy.Location,
+					To:       escapeRoom,
+					MaxSteps: 99,
+				})
+				if path.Valid {
+					if pathLen := len(path.Path) - 1; pathLen < bestLen {
+						bestLen, bestPath = pathLen, path
+					}
+				}
 			}
-			path := CanTraverse(state, PathQuery{
-				From:     enemy.Location,
-				To:       player.Location,
-				MaxSteps: 99, // Effectively no cap - find any reachable player
-			})
-			if !path.Valid {
-				continue // Player not reachable
-			}
-			if pathLen := len(path.Path) - 1; pathLen < bestLen {
-				bestLen, bestPath = pathLen, path
+		} else {
+			// Regular enemies move toward players
+			bestPath = PathResult{}
+			bestLen = 999
+			targetType = "player"
+			
+			for _, player := range state.Players {
+				if player.HP == 0 {
+					continue // Skip dead players
+				}
+				path := CanTraverse(state, PathQuery{
+					From:     enemy.Location,
+					To:       player.Location,
+					MaxSteps: 99, // Effectively no cap - find any reachable player
+				})
+				if !path.Valid {
+					continue // Player not reachable
+				}
+				if pathLen := len(path.Path) - 1; pathLen < bestLen {
+					bestLen, bestPath = pathLen, path
+				}
 			}
 		}
 
 		if !bestPath.Valid {
-			continue // No reachable player found
+			continue // No reachable target found
 		}
 
 		// 2️⃣ Move up to N steps along that path
@@ -99,12 +126,16 @@ func ApplyMoveEnemies(state *GameState, effect Effect, playerID PlayerID, log *E
 			step = bestLen // Can't move more steps than path length
 		}
 		if step == 0 {
-			continue // Already at player location
+			continue // Already at target location
 		}
 
 		oldLocation := enemy.Location
 		enemy.Location = bestPath.Path[step]
-		log.Add("🚶 %s moves %s → %s", getEnemyDisplayName(enemy.Type), oldLocation, enemy.Location)
+		if enemy.Type == Pythogoras {
+			log.Add("🚶 %s moves %s → %s (guarding %s)", getEnemyDisplayName(enemy.Type), oldLocation, enemy.Location, targetType)
+		} else {
+			log.Add("🚶 %s moves %s → %s", getEnemyDisplayName(enemy.Type), oldLocation, enemy.Location)
+		}
 		moved++
 	}
 	
