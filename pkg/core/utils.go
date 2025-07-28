@@ -144,6 +144,16 @@ func getScopeName(scope ScopeType) string {
 	}
 }
 
+// GetEffectOpName returns the readable name for an effect operation (exported)
+func GetEffectOpName(op EffectOp) string {
+	return getEffectOpName(op)
+}
+
+// GetScopeName returns the readable name for an effect scope (exported)
+func GetScopeName(scope ScopeType) string {
+	return getScopeName(scope)
+}
+
 // selectRoomWithTieBreaking selects the best room from candidates using pathfinding-based tie-breaking
 // Returns the room closest to the active player's position in case of ties
 func selectRoomWithTieBreaking(state *GameState, candidates []RoomID) RoomID {

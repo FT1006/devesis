@@ -309,6 +309,7 @@ func (g *GameManager) showHelp() error {
 	fmt.Println("  status         (st)  - Show current status")
 	fmt.Println("  help           (?)   - Show this help")
 	fmt.Println("  rule           (ru)  - Show game rules (pager view)")
+	fmt.Println("  list           (cl)  - Show all cards (pager view)")
 	fmt.Println("  quit           (q)   - Exit game")
 	fmt.Println()
 	
@@ -415,6 +416,94 @@ Press 'q' to exit this view.
 `
 
 	return g.showInPager(rulesContent)
+}
+
+func (g *GameManager) showCardList() error {
+	var content strings.Builder
+	
+	content.WriteString("DEVESIS: TUTORIAL HELL - CARD DATABASE\n")
+	content.WriteString("=====================================\n\n")
+	
+	// Group cards by category
+	actionCards := []core.Card{}
+	specialCards := []core.Card{}
+	eventCards := []core.Card{}
+	
+	// Sort cards into categories
+	for _, card := range core.CardDB {
+		switch card.Source {
+		case core.SrcAction:
+			actionCards = append(actionCards, card)
+		case core.SrcSpecial:
+			specialCards = append(specialCards, card)
+		case core.SrcEvent:
+			eventCards = append(eventCards, card)
+		}
+	}
+	
+	// Display Action Cards
+	if len(actionCards) > 0 {
+		content.WriteString("ACTION CARDS\n")
+		content.WriteString("============\n")
+		content.WriteString("Cards you draw and play during your turn.\n\n")
+		
+		for _, card := range actionCards {
+			content.WriteString(fmt.Sprintf("%s - %s\n", card.Name, card.ID))
+			content.WriteString(fmt.Sprintf("  %s\n", card.Description))
+			if len(card.Effects) > 0 {
+				content.WriteString("  Effects:\n")
+				for _, effect := range card.Effects {
+					content.WriteString(fmt.Sprintf("    • %s (scope: %s, n: %d)\n", 
+						core.GetEffectOpName(effect.Op), core.GetScopeName(effect.Scope), effect.N))
+				}
+			}
+			content.WriteString("\n")
+		}
+	}
+	
+	// Display Special Cards
+	if len(specialCards) > 0 {
+		content.WriteString("SPECIAL CARDS\n")
+		content.WriteString("=============\n")
+		content.WriteString("Rare cards found by searching specific rooms.\n\n")
+		
+		for _, card := range specialCards {
+			content.WriteString(fmt.Sprintf("%s - %s\n", card.Name, card.ID))
+			content.WriteString(fmt.Sprintf("  %s\n", card.Description))
+			if len(card.Effects) > 0 {
+				content.WriteString("  Effects:\n")
+				for _, effect := range card.Effects {
+					content.WriteString(fmt.Sprintf("    • %s (scope: %s, n: %d)\n", 
+						core.GetEffectOpName(effect.Op), core.GetScopeName(effect.Scope), effect.N))
+				}
+			}
+			content.WriteString("\n")
+		}
+	}
+	
+	// Display Event Cards
+	if len(eventCards) > 0 {
+		content.WriteString("EVENT CARDS\n")
+		content.WriteString("===========\n")
+		content.WriteString("System events that occur during the Event Phase.\n\n")
+		
+		for _, card := range eventCards {
+			content.WriteString(fmt.Sprintf("%s - %s\n", card.Name, card.ID))
+			content.WriteString(fmt.Sprintf("  %s\n", card.Description))
+			if len(card.Effects) > 0 {
+				content.WriteString("  Effects:\n")
+				for _, effect := range card.Effects {
+					content.WriteString(fmt.Sprintf("    • %s (scope: %s, n: %d)\n", 
+						core.GetEffectOpName(effect.Op), core.GetScopeName(effect.Scope), effect.N))
+				}
+			}
+			content.WriteString("\n")
+		}
+	}
+	
+	content.WriteString("\nPress 'q' to exit this view.\n")
+	
+	return g.showInPager(content.String())
 }
 
 func (g *GameManager) showInPager(content string) error {

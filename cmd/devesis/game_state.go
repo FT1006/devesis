@@ -112,7 +112,7 @@ func (g *GameManager) DisplayPrompt() {
 	}
 	
 	fmt.Printf("\n[ACTIONS] move(mv) play(c) search(s) shoot(f) melee(ml) room(ra) pass(p)\n")
-	fmt.Printf("[INFO] hand(h) map(mp) status(st) rule(ru) help(?) quit/exit(q)\n")
+	fmt.Printf("[INFO] hand(h) map(mp) status(st) rule(ru) list(cl) help(?) quit/exit(q)\n")
 	fmt.Printf("(%d actions left) > ", g.state.ActionsLeft)
 }
 
@@ -319,6 +319,8 @@ func (g *GameManager) ExecuteCommand(command string, args []string, reader *bufi
 		return g.showHelp()
 	case "rule", "ru":
 		return g.showRules()
+	case "list", "cl":
+		return g.showCardList()
 	case "quit", "q":
 		fmt.Println("Thanks for playing!")
 		return fmt.Errorf("quit")
