@@ -25,10 +25,7 @@ func DrawPhase(state *GameState) {
 			
 			// Shuffle the new deck
 			rng := rand.New(rand.NewSource(state.RandSeed + int64(state.Round)*100 + int64(i)))
-			for j := len(player.Deck) - 1; j > 0; j-- {
-				k := rng.Intn(j + 1)
-				player.Deck[j], player.Deck[k] = player.Deck[k], player.Deck[j]
-			}
+			shuffleCards(player.Deck, rng)
 		}
 		
 		// Draw from deck if available
@@ -238,5 +235,13 @@ func getEnemyTypeName(enemyType EnemyType) string {
 		return "PYTHO"
 	default:
 		return "UNKNOWN"
+	}
+}
+
+// shuffleCards shuffles a slice of CardIDs using Fisher-Yates algorithm
+func shuffleCards(cards []CardID, rng *rand.Rand) {
+	for i := len(cards) - 1; i > 0; i-- {
+		j := rng.Intn(i + 1)
+		cards[i], cards[j] = cards[j], cards[i]
 	}
 }
