@@ -25,6 +25,9 @@ func DrawPhase(state *GameState) {
 	if cardsToDraw > 0 {
 		rng := rand.New(rand.NewSource(state.RandSeed + int64(state.Round)*100))
 		drawCards(&player.Hand, &player.Deck, &player.Discard, cardsToDraw, rng)
+		
+		// Enforce hand limit if drawing would exceed it
+		enforceHandLimitWithDiscard(&player.Hand, &player.Discard)
 	}
 	
 	// Set actions for player phase
