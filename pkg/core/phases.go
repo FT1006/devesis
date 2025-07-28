@@ -15,28 +15,9 @@ func DrawPhase(state *GameState) {
 	targetHandSize := 5
 	cardsToDraw := targetHandSize - len(player.Hand)
 	
-	for i := 0; i < cardsToDraw; i++ {
-		// If deck is empty, shuffle discard pile into deck
-		if len(player.Deck) == 0 && len(player.Discard) > 0 {
-			// Move all discard cards to deck
-			player.Deck = make([]CardID, len(player.Discard))
-			copy(player.Deck, player.Discard)
-			player.Discard = []CardID{}
-			
-			// Shuffle the new deck
-			rng := rand.New(rand.NewSource(state.RandSeed + int64(state.Round)*100 + int64(i)))
-			shuffleCards(player.Deck, rng)
-		}
-		
-		// Draw from deck if available
-		if len(player.Deck) > 0 {
-			cardID := player.Deck[0]
-			player.Deck = player.Deck[1:]
-			player.Hand = append(player.Hand, cardID)
-		} else {
-			// No more cards available in deck or discard
-			break
-		}
+	if cardsToDraw > 0 {
+		rng := rand.New(rand.NewSource(state.RandSeed + int64(state.Round)*100))
+		drawCards(&player.Hand, &player.Deck, &player.Discard, cardsToDraw, rng)
 	}
 	
 	// Set actions for player phase

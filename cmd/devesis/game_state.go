@@ -92,15 +92,28 @@ func (g *GameManager) DisplayStatus() {
 		return
 	}
 	
-	// Display hand first
-	g.displayHandStatus(player)
-	
-	// Then display bordered status panel
+	// Display bordered status panel only
 	g.displayStatusPanel(player)
+}
+
+func (g *GameManager) DisplayHand() {
+	player := core.GetActivePlayer(g.state)
+	if player == nil {
+		return
+	}
 	
-	// Finally display command help
+	g.displayHandStatus(player)
+}
+
+func (g *GameManager) DisplayPrompt() {
+	player := core.GetActivePlayer(g.state)
+	if player == nil {
+		return
+	}
+	
 	fmt.Printf("\n[ACTIONS] move(mv) play(c) search(s) shoot(f) melee(ml) room(ra) pass(p)\n")
-	fmt.Printf("[INFO] hand(h) map(mp) status(st) help(?) quit/exit(q)\n")
+	fmt.Printf("[INFO] hand(h) map(mp) status(st) rule(ru) help(?) quit/exit(q)\n")
+	fmt.Printf("(%d actions left) > ", g.state.ActionsLeft)
 }
 
 func (g *GameManager) displayHandStatus(player *core.PlayerState) {
@@ -331,13 +344,13 @@ func (g *GameManager) ExecutePlayerPhase(reader *bufio.Reader) error {
 	fmt.Printf("\n=== PLAYER PHASE ===\n")
 	fmt.Printf("Actions remaining: %d\n", g.state.ActionsLeft)
 	
+	// Initial display: Hand + Status + Prompt
+	g.DisplayStatus()
+	g.DisplayHand()
+	g.DisplayPrompt()
+	
 	// Player action loop - continue until actions exhausted or pass
 	for g.state.ActionsLeft > 0 {
-		// Display current status
-		g.DisplayStatus()
-		
-		// Show command prompt
-		fmt.Printf("(%d actions left) > ", g.state.ActionsLeft)
 		
 		// Read command
 		input, err := reader.ReadString('\n')
@@ -365,6 +378,11 @@ func (g *GameManager) ExecutePlayerPhase(reader *bufio.Reader) error {
 				return err
 			}
 			fmt.Printf("Error: %v\n", err)
+		}
+		
+		// Show appropriate display after command execution
+		if g.state.ActionsLeft > 0 {
+			g.DisplayPrompt()
 		}
 		
 		// Check if player passed (ActionsLeft set to 0)

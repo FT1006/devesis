@@ -59,10 +59,11 @@ func CanTraverse(gs *GameState, q PathQuery) PathResult {
 		neighbors := getNeighbors(current.room, q.Diagonal)
 		
 		for _, neighbor := range neighbors {
-			// Skip if room doesn't exist or is corrupted
-			if gs.Rooms[neighbor] == nil || gs.Rooms[neighbor].Corrupted {
+			// Skip if room doesn't exist
+			if gs.Rooms[neighbor] == nil {
 				continue
 			}
+			// Note: Corrupted rooms are passable (blocking not implemented for solo play)
 			
 			if neighbor == q.To {
 				return PathResult{

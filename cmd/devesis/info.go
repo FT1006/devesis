@@ -315,10 +315,12 @@ RESOURCES
 
 MOVEMENT & QUESTIONS
 ------------------
-Moving between rooms has consequences (equal 1/3 chance each):
-• 1 bug placed in room you left
-• 1 bug placed in up to 2 random adjacent rooms to where you left  
-• Safe movement (no bugs)
+• You can move to any orthogonally adjacent room (4 directions)
+• All rooms are passable, including corrupted ones
+• Moving between rooms has consequences (equal 1/3 chance each):
+  - 1 bug placed in room you left
+  - 1 bug placed in up to 2 random adjacent rooms to where you left  
+  - Safe movement (no bugs)
 
 At 3+ bugs, rooms become corrupted and spawn more enemies.
 

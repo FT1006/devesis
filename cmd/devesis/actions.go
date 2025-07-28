@@ -35,7 +35,7 @@ func (g *GameManager) executeMove(args []string) error {
 	
 	// Check basic movement validity first
 	if !core.CanMove(g.state, player.Location, core.RoomID(targetRoom)) {
-		fmt.Printf("✗ Cannot move to %s (not adjacent or blocked).\n", targetRoom)
+		fmt.Printf("✗ Cannot move to %s (not adjacent).\n", targetRoom)
 		return nil
 	}
 	

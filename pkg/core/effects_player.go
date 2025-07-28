@@ -38,7 +38,18 @@ func ApplyModifyAmmo(state *GameState, effect Effect, playerID PlayerID) error {
 
 // ApplyDrawCards draws cards from deck to hand
 func ApplyDrawCards(state *GameState, effect Effect, playerID PlayerID) error {
-	// TODO: Implement when deck system exists
+	targets := getPlayerTargets(state, effect.Scope, playerID)
+	
+	// Create RNG for deterministic card drawing
+	rng := GetGameRNG(state)
+	
+	for _, player := range targets {
+		drawCards(&player.Hand, &player.Deck, &player.Discard, effect.N, rng)
+		
+		// Enforce hand limit if drawing would exceed it
+		enforceHandLimitWithDiscard(&player.Hand, &player.Discard)
+	}
+	
 	return nil
 }
 

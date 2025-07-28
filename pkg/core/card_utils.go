@@ -69,3 +69,31 @@ func shuffleRooms(rooms []RoomID, rng *rand.Rand) {
 		rooms[i], rooms[j] = rooms[j], rooms[i]
 	}
 }
+
+// drawCards draws up to `count` cards from deck to hand, handling deck reshuffling
+// Returns the number of cards actually drawn
+func drawCards(hand *[]CardID, deck *[]CardID, discard *[]CardID, count int, rng *rand.Rand) int {
+	cardsDrawn := 0
+	
+	for i := 0; i < count; i++ {
+		// If deck is empty, shuffle discard pile into deck
+		if len(*deck) == 0 && len(*discard) > 0 {
+			// Move all discard cards to deck
+			moveAllCards(discard, deck)
+			
+			// Shuffle the new deck
+			shuffleCards(*deck, rng)
+		}
+		
+		// Draw from deck if available
+		if len(*deck) > 0 {
+			moveCardByIndex(deck, hand, 0) // Move first card from deck to hand
+			cardsDrawn++
+		} else {
+			// No more cards available in deck or discard
+			break
+		}
+	}
+	
+	return cardsDrawn
+}
