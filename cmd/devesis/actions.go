@@ -19,10 +19,6 @@ func (g *GameManager) consumeAction() bool {
 }
 
 func (g *GameManager) executeMove(args []string) error {
-	if !g.consumeAction() {
-		return nil
-	}
-	
 	if len(args) == 0 {
 		return fmt.Errorf("usage: move <roomID>")
 	}
@@ -33,9 +29,13 @@ func (g *GameManager) executeMove(args []string) error {
 		return fmt.Errorf("no active player")
 	}
 	
-	// Check basic movement validity first
+	// Check basic movement validity first - don't consume action if invalid
 	if !core.CanMove(g.state, player.Location, core.RoomID(targetRoom)) {
 		fmt.Printf("✗ Cannot move to %s (not adjacent).\n", targetRoom)
+		return nil
+	}
+	
+	if !g.consumeAction() {
 		return nil
 	}
 	
@@ -223,19 +223,19 @@ func (g *GameManager) getEnemyName(enemyType core.EnemyType) string {
 }
 
 func (g *GameManager) executeSearch() error {
-	if !g.consumeAction() {
-		return nil
-	}
-	
 	player := core.GetActivePlayer(g.state)
 	if player == nil {
 		return fmt.Errorf("no active player")
 	}
 	
-	// Check if room was already searched
+	// Check if room was already searched - don't consume action if invalid
 	currentRoom := g.state.Rooms[player.Location]
 	if currentRoom != nil && currentRoom.Searched {
 		fmt.Println("❌ This room has already been searched.")
+		return nil
+	}
+	
+	if !g.consumeAction() {
 		return nil
 	}
 	
@@ -250,22 +250,18 @@ func (g *GameManager) executeSearch() error {
 }
 
 func (g *GameManager) executeShoot() error {
-	if !g.consumeAction() {
-		return nil
-	}
-	
 	player := core.GetActivePlayer(g.state)
 	if player == nil {
 		return fmt.Errorf("no active player")
 	}
 	
-	// Check ammo before attempting
+	// Check ammo before attempting - don't consume action if insufficient
 	if player.Ammo < core.ShootAmmoCost {
 		fmt.Printf("✗ Not enough ammo! Need %d ammo, have %d.\n", core.ShootAmmoCost, player.Ammo)
 		return nil
 	}
 	
-	// Get adjacent rooms and count targets
+	// Get adjacent rooms and count targets - don't consume action if no targets
 	adjacentRooms := core.GetAdjacentRooms(player.Location)
 	targets := make(map[core.RoomID][]core.EnemyID)
 	totalTargets := 0
@@ -285,6 +281,10 @@ func (g *GameManager) executeShoot() error {
 		return nil
 	}
 	
+	if !g.consumeAction() {
+		return nil
+	}
+	
 	action := core.ShootAction{
 		PlayerID: player.ID,
 	}
@@ -294,16 +294,12 @@ func (g *GameManager) executeShoot() error {
 }
 
 func (g *GameManager) executeMelee() error {
-	if !g.consumeAction() {
-		return nil
-	}
-	
 	player := core.GetActivePlayer(g.state)
 	if player == nil {
 		return fmt.Errorf("no active player")
 	}
 	
-	// Count targets in current room
+	// Count targets in current room - don't consume action if no targets
 	targets := make([]core.EnemyID, 0)
 	for enemyID, enemy := range g.state.Enemies {
 		if enemy.Location == player.Location {
@@ -316,6 +312,10 @@ func (g *GameManager) executeMelee() error {
 		return nil
 	}
 	
+	if !g.consumeAction() {
+		return nil
+	}
+	
 	action := core.MeleeAction{
 		PlayerID: player.ID,
 	}
@@ -325,10 +325,6 @@ func (g *GameManager) executeMelee() error {
 }
 
 func (g *GameManager) executePlayCard(args []string) error {
-	if !g.consumeAction() {
-		return nil
-	}
-	
 	if len(args) == 0 {
 		return fmt.Errorf("usage: play <cardNumber> or play <cardID>")
 	}
@@ -379,6 +375,10 @@ func (g *GameManager) executePlayCard(args []string) error {
 		return nil
 	}
 	
+	if !g.consumeAction() {
+		return nil
+	}
+	
 	// Execute play card action with logging
 	action := core.PlayCardAction{
 		PlayerID: player.ID,
@@ -391,13 +391,32 @@ func (g *GameManager) executePlayCard(args []string) error {
 }
 
 func (g *GameManager) executeRoomAction() error {
-	if !g.consumeAction() {
-		return nil
-	}
-	
 	player := core.GetActivePlayer(g.state)
 	if player == nil {
 		return fmt.Errorf("no active player")
+	}
+	
+	// Basic validation before consuming action
+	if player.SpecialUsed {
+		fmt.Println("✗ Room action already used this turn!")
+		return nil
+	}
+	
+	// Check if current room has a special ability
+	room := g.state.Rooms[player.Location]
+	if room == nil {
+		fmt.Println("✗ No room found at current location!")
+		return nil
+	}
+	
+	// Check if room type supports actions
+	if room.Type != core.MedBay && room.Type != core.AmmoCache && room.Type != core.CleanRoomType {
+		fmt.Println("✗ No special room action available here")
+		return nil
+	}
+	
+	if !g.consumeAction() {
+		return nil
 	}
 	
 	// Execute room action through core reducer with logging
