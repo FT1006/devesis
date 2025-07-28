@@ -92,6 +92,56 @@ func getEnemyDisplayName(enemyType EnemyType) string {
 	}
 }
 
+// getEffectOpName returns the readable name for an effect operation
+func getEffectOpName(op EffectOp) string {
+	switch op {
+	case ModifyHP:
+		return "ModifyHP"
+	case ModifyAmmo:
+		return "ModifyAmmo"
+	case DrawCards:
+		return "DrawCards"
+	case DiscardCards:
+		return "DiscardCards"
+	case SkipQuestion:
+		return "SkipQuestion"
+	case ModifyBugs:
+		return "ModifyBugs"
+	case RevealRoom:
+		return "RevealRoom"
+	case CleanRoom:
+		return "CleanRoom"
+	case SetCorrupted:
+		return "SetCorrupted"
+	case SpawnEnemy:
+		return "SpawnEnemy"
+	case MoveEnemies:
+		return "MoveEnemies"
+	default:
+		return "Unknown"
+	}
+}
+
+// getScopeName returns the readable name for an effect scope
+func getScopeName(scope ScopeType) string {
+	switch scope {
+	case Self:
+		return "Self"
+	case CurrentRoom:
+		return "CurrentRoom"
+	case AdjacentRooms:
+		return "AdjacentRooms"
+	case AllRooms:
+		return "AllRooms"
+	case RoomWithMostBugs:
+		return "RoomWithMostBugs"
+	case AllPlayers:
+		return "AllPlayers"
+	default:
+		return "Unknown"
+	}
+}
+
 // drawCards draws up to `count` cards from deck to hand, handling deck reshuffling
 // Returns the number of cards actually drawn
 func drawCards(hand *[]CardID, deck *[]CardID, discard *[]CardID, count int, rng *rand.Rand) int {

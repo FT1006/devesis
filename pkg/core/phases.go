@@ -52,6 +52,10 @@ func EventPhase(state *GameState, log *EffectLog) {
 	log.Add("🧬 Step 5: Enemy development...")
 	enemyDevelopmentPhase(state, log)
 	
+	// Step 5.5: Corrupted Room Spawns (enemies spawn in all corrupted rooms)
+	log.Add("👹 Corruption spawns...")
+	corruptedRoomSpawnPhase(state, log)
+	
 	// Step 6: Check End Triggers (handled by caller)
 	log.Add("🎯 Step 6: End condition checks...")
 }
@@ -144,14 +148,24 @@ func systemCrashPhase(state *GameState, log *EffectLog) {
 }
 
 func drawEventCardPhase(state *GameState, log *EffectLog) {
-	// TODO: Implement event cards from YAML
-	// For now, just advance the event index
-	if len(state.Events) > 0 {
-		state.EventIndex = (state.EventIndex + 1) % uint8(len(state.Events))
-		log.Add("🃏 Event card %d drawn (placeholder)", state.EventIndex)
-	} else {
+	if len(state.Events) == 0 {
 		log.Add("🃏 No event cards available")
+		return
 	}
+	
+	// Draw the current event card
+	eventCard := state.Events[state.EventIndex]
+	log.Add("🃏 Event: %s (%s) - %s", eventCard.Name, eventCard.ID, eventCard.Description)
+	
+	// Apply the event card effects
+	for _, effect := range eventCard.Effects {
+		log.Add("🔧 Applying effect: %s (scope: %s, n: %d)", 
+			getEffectOpName(effect.Op), getScopeName(effect.Scope), effect.N)
+		applyEventEffect(state, effect, log)
+	}
+	
+	// Advance to next event card
+	state.EventIndex = (state.EventIndex + 1) % uint8(len(state.Events))
 }
 
 func enemyDevelopmentPhase(state *GameState, log *EffectLog) {
@@ -194,7 +208,7 @@ func enemyDevelopmentPhase(state *GameState, log *EffectLog) {
 		}
 		
 		// Add stronger token back to bag
-		addStrongerToken(state.SpawnBag, token)
+		addStrongerToken(state.SpawnBag, token, log)
 	}
 	
 	if spawned == 0 {
@@ -232,7 +246,17 @@ func spawnEnemy(state *GameState, enemyType EnemyType, rng *rand.Rand, log *Effe
 	return spawnRoom
 }
 
-func addStrongerToken(bag *SpawnBag, token EnemyType) {
+// applyEventEffect applies a single effect from an event card using the centralized handler
+func applyEventEffect(state *GameState, effect Effect, log *EffectLog) {
+	// Event cards don't have a specific player, so use empty PlayerID
+	// The effect system will handle this appropriately
+	playerID := PlayerID("")
+	
+	// Error logging is handled centrally in ApplyEffect
+	ApplyEffect(state, effect, playerID, log)
+}
+
+func addStrongerToken(bag *SpawnBag, token EnemyType, log *EffectLog) {
 	var stronger EnemyType
 	switch token {
 	case InfiniteLoop:
@@ -246,6 +270,39 @@ func addStrongerToken(bag *SpawnBag, token EnemyType) {
 	}
 	
 	bag.Tokens = append(bag.Tokens, stronger)
+	log.Add("🧬 %s token added to spawn bag", getEnemyDisplayName(stronger))
+}
+
+func corruptedRoomSpawnPhase(state *GameState, log *EffectLog) {
+	spawnCount := 0
+	rng := rand.New(rand.NewSource(state.RandSeed + int64(state.Round)*2000))
+	
+	for _, room := range state.Rooms {
+		if room.Corrupted && !room.OutOfRam {
+			// Spawn Infinite Loop (weakest enemy) in each corrupted room
+			enemyID := EnemyID(fmt.Sprintf("CORRUPT_%s_%d", room.ID, state.Round))
+			stats := ENEMY_STATS[InfiniteLoop]
+			
+			enemy := &Enemy{
+				ID:       enemyID,
+				Type:     InfiniteLoop,
+				HP:       stats.HP,
+				MaxHP:    stats.HP,
+				Damage:   stats.Damage,
+				Location: room.ID,
+			}
+			state.Enemies[enemyID] = enemy
+			
+			log.Add("👹 Infinite Loop spawned in corrupted %s", room.ID)
+			spawnCount++
+		}
+	}
+	
+	if spawnCount == 0 {
+		log.Add("👹 No corrupted rooms - no corruption spawns")
+	} else {
+		log.Add("👹 %d enemies spawned from corruption", spawnCount)
+	}
 }
 
 func getEnemyTypeName(enemyType EnemyType) string {

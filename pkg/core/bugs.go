@@ -49,19 +49,73 @@ func PlaceBugs(state *GameState, count uint8) {
 	}
 }
 
-// GetRoomWithMostBugs finds the room with highest bug count for enemy targeting
-func GetRoomWithMostBugs(state *GameState) RoomID {
-	var mostBugs uint8 = 0
-	var targetRoom RoomID = "R12" // Default to start room
+// getRoomWithMostBugs is a helper that finds the room with highest bug count
+// Returns empty string if requireBugs is true and no rooms have bugs (> 0)
+// In case of ties, returns the room closest to R12 (start room) using actual pathfinding
+func getRoomWithMostBugs(state *GameState, requireBugs bool) RoomID {
+	const anchor = "R12"
+	
+	var best RoomID
+	minBugs := 0
+	if requireBugs {
+		minBugs = 1 // Must have at least 1 bug to be considered
+	}
+	
+	maxBugs := minBugs - 1 // Start below minimum
+	bestDistance := 999
 	
 	for id, room := range state.Rooms {
-		if room.BugMarkers > mostBugs {
-			mostBugs = room.BugMarkers
-			targetRoom = id
+		bugs := int(room.BugMarkers)
+		
+		if bugs < maxBugs {
+			continue // Not better than current best
+		}
+		
+		if bugs > maxBugs {
+			// Found room with more bugs
+			best = id
+			maxBugs = bugs
+			// Use actual pathfinding distance to R12
+			path := CanTraverse(state, PathQuery{From: id, To: RoomID(anchor), MaxSteps: 0})
+			if path.Valid {
+				bestDistance = len(path.Path) - 1
+			} else {
+				bestDistance = 999 // No path found
+			}
+			continue
+		}
+		
+		// Tie - pick the one closer to R12 using pathfinding
+		path := CanTraverse(state, PathQuery{From: id, To: RoomID(anchor), MaxSteps: 0})
+		distance := 999
+		if path.Valid {
+			distance = len(path.Path) - 1
+		}
+		
+		if distance < bestDistance {
+			best = id
+			bestDistance = distance
 		}
 	}
 	
-	return targetRoom
+	// Return empty if requireBugs and no rooms have bugs
+	if requireBugs && maxBugs < minBugs {
+		return ""
+	}
+	
+	return best
+}
+
+// GetRoomWithMostBugs finds the room with highest bug count for bug-related effects
+// Returns empty string if no rooms have bugs (> 0)
+func GetRoomWithMostBugs(state *GameState) RoomID {
+	return getRoomWithMostBugs(state, true)
+}
+
+// GetRoomWithMostBugsForSpawn finds the room with highest bug count for enemy spawning
+// Returns a room even if it has 0 bugs (fallback to closest to R12)
+func GetRoomWithMostBugsForSpawn(state *GameState) RoomID {
+	return getRoomWithMostBugs(state, false)
 }
 
 // CheckOutOfRAMCondition returns true if 5+ rooms are OutOfRam (game over)

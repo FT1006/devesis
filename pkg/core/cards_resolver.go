@@ -1,7 +1,5 @@
 package core
 
-import "fmt"
-
 // ApplyCardEffects executes all effects from a card on the game state
 func ApplyCardEffects(state GameState, card Card, playerID PlayerID, log *EffectLog) GameState {
 	// Validate all effects before applying any
@@ -14,6 +12,7 @@ func ApplyCardEffects(state GameState, card Card, playerID PlayerID, log *Effect
 	newState := deepCopyGameState(state)
 	for _, effect := range card.Effects {
 		if err := applyEffect(&newState, effect, playerID, log); err != nil {
+			// Error logging is handled centrally in ApplyEffect
 			// Return original state if any effect fails
 			return state
 		}
@@ -22,30 +21,7 @@ func ApplyCardEffects(state GameState, card Card, playerID PlayerID, log *Effect
 	return newState
 }
 
-// applyEffect executes a single effect on the game state
+// applyEffect executes a single effect on the game state using the centralized handler
 func applyEffect(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
-	switch effect.Op {
-	case ModifyHP:
-		return ApplyModifyHP(state, effect, playerID, log)
-	case ModifyAmmo:
-		return ApplyModifyAmmo(state, effect, playerID, log)
-	case DrawCards:
-		return ApplyDrawCards(state, effect, playerID, log)
-	case DiscardCards:
-		return ApplyDiscardCards(state, effect, playerID, log)
-	case SkipQuestion:
-		return ApplySkipQuestion(state, effect, playerID, log)
-	case ModifyBugs:
-		return ApplyModifyBugs(state, effect, playerID, log)
-	case RevealRoom:
-		return ApplyRevealRoom(state, effect, playerID, log)
-	case CleanRoom:
-		return ApplyCleanRoom(state, effect, playerID, log)
-	case SetCorrupted:
-		return ApplySetCorrupted(state, effect, playerID, log)
-	case SpawnEnemy:
-		return ApplySpawnEnemy(state, effect, playerID, log)
-	default:
-		return fmt.Errorf("unknown effect op: %v", effect.Op)
-	}
+	return ApplyEffect(state, effect, playerID, log)
 }
