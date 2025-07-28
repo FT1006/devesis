@@ -283,6 +283,8 @@ func (g *GameManager) ExecuteCommand(command string, args []string) error {
 		return nil
 	case "help", "?":
 		return g.showHelp()
+	case "rule", "ru":
+		return g.showRules()
 	case "quit", "q":
 		fmt.Println("Thanks for playing!")
 		return fmt.Errorf("quit")

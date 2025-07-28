@@ -2,7 +2,10 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 	"strings"
+	"io/ioutil"
 
 	"github.com/spaceship/devesis/pkg/core"
 )
@@ -241,8 +244,142 @@ func (g *GameManager) showHelp() error {
 	fmt.Println("  map            (mp)  - Display game map")
 	fmt.Println("  status         (st)  - Show current status")
 	fmt.Println("  help           (?)   - Show this help")
+	fmt.Println("  rule           (ru)  - Show game rules (pager view)")
 	fmt.Println("  quit           (q)   - Exit game")
 	fmt.Println()
 	
 	return nil
+}
+
+func (g *GameManager) showRules() error {
+	rulesContent := `
+DEVESIS: TUTORIAL HELL - GAME RULES
+==================================
+
+OBJECTIVE
+---------
+Escape the corrupted spaceship USS Boot.dev before time runs out! Collect engine components
+and activate the escape pods while surviving the programming malware that infests the ship.
+
+WIN CONDITION
+-------------
+1. Search engine rooms (R15, R17, R18) to collect 3 Engine Core cards
+2. Navigate to escape rooms (R19 or R20)  
+3. Play an Engine Core card at the escape room (if no Pythogoras present)
+4. Victory! You've escaped Tutorial Hell!
+
+TURN STRUCTURE (4 Phases)
+-------------------------
+1. DRAW PHASE: Auto-refill hand to 5 cards from deck
+2. PLAYER PHASE: Take up to 2 actions per turn
+3. EVENT PHASE: Time decreases, enemies attack/move, corruption spreads
+4. ROUND MAINTENANCE: Advance to next round
+
+PLAYER ACTIONS (Cost 1 Action Each)
+----------------------------------
+• move <roomID>    - Move to adjacent room (triggers coding question)
+• play <cardID>    - Play a card from your hand  
+• search           - Search current room for special items
+• shoot            - Attack enemies in adjacent rooms (costs 1 ammo)
+• melee            - Attack enemies in current room (no ammo cost)
+• room             - Use current room's special ability
+• pass             - End turn early
+
+INFORMATION COMMANDS (Free)
+--------------------------
+• hand             - Show cards in hand
+• map              - Display ship layout
+• status           - Show player stats and room info
+• help             - Show command help
+• rule             - Show these rules (you're here!)
+
+SPECIAL ROOMS
+-------------
+• R01 (KEY): Search to gain BOOT.dev KEY (increases damage from 1 to 3)
+• R15/R17/R18 (Engines): Search to gain 3 Engine Core cards
+• R19/R20 (Escape): Play Engine Core here to win (if no Pythogoras)
+• R12 (Start): Your starting location
+
+ENEMIES
+-------
+• Infinite Loop (1 HP, 1 DMG): Weak but numerous
+• Stack Overflow (3 HP, 1 DMG): Medium threat  
+• Pythogoras (6 HP, 1 DMG): Powerful boss - blocks escape rooms
+
+RESOURCES
+---------
+• HP: Health points - game over if reduced to 0
+• Ammo: Required for shooting attacks
+• Cards: Hand limit of 6 cards, excess go to discard
+• Time: 15 rounds total - game over if time expires
+
+MOVEMENT & QUESTIONS
+------------------
+Moving between rooms triggers coding questions. Wrong answers add bug markers
+to rooms. At 3+ bugs, rooms become corrupted and spawn more enemies.
+
+CARD SYSTEM
+-----------
+• Deck starts with 10 random action cards
+• Hand refills to 5 cards each turn
+• When deck empty, discard pile shuffles back into deck
+• Special cards found by searching rooms
+
+TIPS FOR SURVIVAL
+-----------------
+1. Search the KEY room (R01) early for damage boost
+2. Collect all 3 engines before heading to escape
+3. Clear Pythogoras from escape rooms before playing Engine Core
+4. Manage ammo and HP carefully - use room abilities when possible
+5. Answer coding questions correctly to avoid corruption
+
+Press 'q' to exit this view.
+`
+
+	return g.showInPager(rulesContent)
+}
+
+func (g *GameManager) showInPager(content string) error {
+	// Try to use system pager (less, more, etc.)
+	pager := os.Getenv("PAGER")
+	if pager == "" {
+		// Default pagers in order of preference
+		pagers := []string{"less", "more", "cat"}
+		for _, p := range pagers {
+			if _, err := exec.LookPath(p); err == nil {
+				pager = p
+				break
+			}
+		}
+	}
+
+	if pager == "" {
+		// Fallback: just print to stdout
+		fmt.Print(content)
+		return nil
+	}
+
+	// Create temporary file with content
+	tmpfile, err := ioutil.TempFile("", "devesis-rules-*.txt")
+	if err != nil {
+		// Fallback: just print to stdout
+		fmt.Print(content)
+		return nil
+	}
+	defer os.Remove(tmpfile.Name())
+
+	if _, err := tmpfile.Write([]byte(content)); err != nil {
+		tmpfile.Close()
+		fmt.Print(content)
+		return nil
+	}
+	tmpfile.Close()
+
+	// Launch pager with the temporary file
+	cmd := exec.Command(pager, tmpfile.Name())
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	
+	return cmd.Run()
 }
