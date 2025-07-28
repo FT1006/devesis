@@ -159,6 +159,8 @@ func stringToEffectOp(s string) (EffectOp, error) {
 		return SetCorrupted, nil
 	case "SpawnEnemy":
 		return SpawnEnemy, nil
+	case "MoveEnemies":
+		return MoveEnemies, nil
 	default:
 		return 0, fmt.Errorf("unknown effect op: %s", s)
 	}

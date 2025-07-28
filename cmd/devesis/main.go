@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
 )
 
 func main() {
@@ -18,41 +17,36 @@ func main() {
 
 	reader := bufio.NewReader(os.Stdin)
 
-	// Main game loop
+	// Main game loop with 4-phase structure
+	quitByPlayer := false
 	for !game.IsGameOver() {
-		// Display game status
-		game.DisplayStatus()
-
-		// Show command prompt
-		fmt.Print("> ")
-
-		// Read command
-		input, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Println("Error reading input:", err)
-			continue
+		// Phase 1: Draw Phase
+		game.ExecuteDrawPhase()
+		
+		// Phase 2: Player Phase (action-driven commands)
+		if err := game.ExecutePlayerPhase(reader); err != nil {
+			if err.Error() == "quit" {
+				quitByPlayer = true
+				break
+			}
+			fmt.Printf("Player phase error: %v\n", err)
 		}
-
-		input = strings.TrimSpace(input)
-		if input == "" {
-			continue
-		}
-
-		// Parse and execute command
-		args := strings.Fields(input)
-		if len(args) == 0 {
-			continue
-		}
-
-		command := strings.ToLower(args[0])
-		commandArgs := args[1:]
-
-		// Execute command
-		if err := game.ExecuteCommand(command, commandArgs); err != nil {
-			fmt.Printf("Error: %v\n", err)
+		
+		// Phase 3: Event Phase
+		game.ExecuteEventPhase()
+		
+		// Phase 4: Round Maintenance
+		game.ExecuteRoundMaintenance()
+		
+		// Check end conditions after each round
+		if ended, win := game.CheckEndConditions(); ended {
+			game.DisplayGameResult(win)
+			return
 		}
 	}
 
-	// Game over
-	game.DisplayGameOver()
+	if !quitByPlayer {
+		// Game over due to normal end conditions
+		game.DisplayGameOver()
+	}
 }

@@ -47,6 +47,7 @@ func isValidOpScope(op EffectOp, scope ScopeType) bool {
 		CleanRoom:    {CurrentRoom, AdjacentRooms, AllRooms},
 		SetCorrupted: {CurrentRoom, AdjacentRooms, AllRooms, RoomWithMostBugs},
 		SpawnEnemy:   {CurrentRoom, RoomWithMostBugs},
+		MoveEnemies:  {AllRooms}, // Enemy movement affects all enemies
 	}
 
 	scopes, exists := validScopes[op]
@@ -79,6 +80,8 @@ func isValidNValue(op EffectOp, n int) bool {
 		return n == 1
 	case SetCorrupted:
 		return n == 0 || n == 1
+	case MoveEnemies:
+		return n >= 1 && n <= 3 // 1-3 steps movement
 	default:
 		return false
 	}
@@ -90,7 +93,7 @@ func isValidPhaseOp(source EffectSource, op EffectOp) bool {
 	case SrcAction:
 		return true // All ops allowed in action phase
 	case SrcEvent:
-		allowedOps := []EffectOp{SpawnEnemy, ModifyBugs, SetCorrupted, CleanRoom, RevealRoom}
+		allowedOps := []EffectOp{SpawnEnemy, ModifyBugs, SetCorrupted, CleanRoom, RevealRoom, MoveEnemies}
 		for _, allowedOp := range allowedOps {
 			if op == allowedOp {
 				return true

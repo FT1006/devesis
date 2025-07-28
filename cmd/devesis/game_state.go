@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/spaceship/devesis/pkg/core"
@@ -139,5 +141,92 @@ func (g *GameManager) ExecuteCommand(command string, args []string) error {
 		
 	default:
 		return fmt.Errorf("unknown command. Type '?' for help")
+	}
+}
+
+// Phase execution methods for 4-phase round structure
+
+func (g *GameManager) ExecuteDrawPhase() {
+	fmt.Printf("\n=== ROUND %d: DRAW PHASE ===\n", g.state.Round)
+	core.DrawPhase(g.state)
+	
+	player := core.GetActivePlayer(g.state)
+	if player != nil {
+		fmt.Printf("📋 Drew cards. Hand: %d cards, Deck: %d cards\n", len(player.Hand), len(player.Deck))
+	}
+}
+
+func (g *GameManager) ExecutePlayerPhase(reader *bufio.Reader) error {
+	fmt.Printf("\n=== PLAYER PHASE ===\n")
+	fmt.Printf("Actions remaining: %d\n", g.state.ActionsLeft)
+	
+	// Player action loop - continue until actions exhausted or pass
+	for g.state.ActionsLeft > 0 {
+		// Display current status
+		g.DisplayStatus()
+		
+		// Show command prompt
+		fmt.Printf("(%d actions left) > ", g.state.ActionsLeft)
+		
+		// Read command
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			return fmt.Errorf("error reading input: %w", err)
+		}
+		
+		input = strings.TrimSpace(input)
+		if input == "" {
+			continue
+		}
+		
+		// Parse and execute command
+		args := strings.Fields(input)
+		if len(args) == 0 {
+			continue
+		}
+		
+		command := strings.ToLower(args[0])
+		commandArgs := args[1:]
+		
+		// Execute command
+		if err := g.ExecuteCommand(command, commandArgs); err != nil {
+			if err.Error() == "quit" {
+				return err
+			}
+			fmt.Printf("Error: %v\n", err)
+		}
+		
+		// Check if player passed (ActionsLeft set to 0)
+		if g.state.ActionsLeft == 0 {
+			break
+		}
+	}
+	
+	fmt.Println("Player phase complete.")
+	return nil
+}
+
+func (g *GameManager) ExecuteEventPhase() {
+	fmt.Printf("\n=== EVENT PHASE ===\n")
+	core.EventPhase(g.state)
+	fmt.Printf("Time remaining: %d rounds\n", g.state.Time)
+}
+
+func (g *GameManager) ExecuteRoundMaintenance() {
+	fmt.Printf("\n=== ROUND MAINTENANCE ===\n")
+	core.EndRoundMaintenance(g.state)
+	fmt.Printf("Round %d complete. Starting round %d...\n", g.state.Round-1, g.state.Round)
+}
+
+func (g *GameManager) CheckEndConditions() (ended bool, win bool) {
+	return core.CheckEndSolo(g.state)
+}
+
+func (g *GameManager) DisplayGameResult(win bool) {
+	fmt.Println("\n========== GAME COMPLETE ==========")
+	if win {
+		fmt.Println("🎉 VICTORY! You escaped Tutorial Hell!")
+	} else {
+		fmt.Println("💀 DEFEAT! You were consumed by the corruption...")
 	}
 }

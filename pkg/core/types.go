@@ -6,6 +6,11 @@ type GameState struct {
 	RandSeed   int64
 	EventIndex uint8
 	
+	// Turn controller fields
+	ActionsLeft   int      // 0-2 actions remaining for current player
+	Phase         string   // "player" or "event"
+	ActivePlayer  PlayerID
+	
 	Rooms         map[RoomID]*RoomState
 	Players       map[PlayerID]*PlayerState
 	Events        []EventCard

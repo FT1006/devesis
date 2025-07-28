@@ -17,6 +17,7 @@ const (
 	CleanRoom
 	SetCorrupted
 	SpawnEnemy
+	MoveEnemies
 )
 
 // ScopeType enumeration
