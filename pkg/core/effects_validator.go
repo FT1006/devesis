@@ -41,7 +41,7 @@ func isValidOpScope(op EffectOp, scope ScopeType) bool {
 		ModifyAmmo:   {Self, AllPlayers},
 		DrawCards:    {Self, AllPlayers},
 		DiscardCards: {Self, AllPlayers},
-		SkipQuestion: {Self},
+		OutOfRam:     {RoomWithMostEnemies},
 		ModifyBugs:   {CurrentRoom, AdjacentRooms, AllRooms, RoomWithMostBugs},
 		RevealRoom:   {CurrentRoom, AdjacentRooms, AllRooms},
 		CleanRoom:    {CurrentRoom, AdjacentRooms, AllRooms},
@@ -74,8 +74,8 @@ func isValidNValue(op EffectOp, n int) bool {
 		return n >= 1 && n <= 5
 	case SpawnEnemy:
 		return n >= 1 && n <= 3
-	case SkipQuestion:
-		return n >= 1 && n <= 3
+	case OutOfRam:
+		return n == 1
 	case RevealRoom, CleanRoom:
 		return n == 1
 	case SetCorrupted:

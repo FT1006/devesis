@@ -147,8 +147,8 @@ func stringToEffectOp(s string) (EffectOp, error) {
 		return DrawCards, nil
 	case "DiscardCards":
 		return DiscardCards, nil
-	case "SkipQuestion":
-		return SkipQuestion, nil
+	case "OutOfRam":
+		return OutOfRam, nil
 	case "ModifyBugs":
 		return ModifyBugs, nil
 	case "RevealRoom":
@@ -179,6 +179,8 @@ func stringToScopeType(s string) (ScopeType, error) {
 		return AllRooms, nil
 	case "RoomWithMostBugs":
 		return RoomWithMostBugs, nil
+	case "RoomWithMostEnemies":
+		return RoomWithMostEnemies, nil
 	case "AllPlayers":
 		return AllPlayers, nil
 	default:

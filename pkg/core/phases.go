@@ -132,7 +132,7 @@ func systemCrashPhase(state *GameState, log *EffectLog) {
 		room := state.Rooms[enemy.Location]
 		if room != nil && room.OutOfRam {
 			oldHP := enemy.HP
-			enemy.HP--
+			enemy.HP -= 2  // Increased damage from 1 to 2
 			if enemy.HP <= 0 {
 				log.Add("💥 %s destroyed by system crash in %s!", getEnemyDisplayName(enemy.Type), enemy.Location)
 				delete(state.Enemies, enemyID)
@@ -275,7 +275,6 @@ func addStrongerToken(bag *SpawnBag, token EnemyType, log *EffectLog) {
 
 func corruptedRoomSpawnPhase(state *GameState, log *EffectLog) {
 	spawnCount := 0
-	rng := rand.New(rand.NewSource(state.RandSeed + int64(state.Round)*2000))
 	
 	for _, room := range state.Rooms {
 		if room.Corrupted && !room.OutOfRam {

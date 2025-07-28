@@ -14,8 +14,8 @@ func ApplyEffect(state *GameState, effect Effect, playerID PlayerID, log *Effect
 		err = ApplyDrawCards(state, effect, playerID, log)
 	case DiscardCards:
 		err = ApplyDiscardCards(state, effect, playerID, log)
-	case SkipQuestion:
-		err = ApplySkipQuestion(state, effect, playerID, log)
+	case OutOfRam:
+		err = ApplyOutOfRam(state, effect, playerID, log)
 	case ModifyBugs:
 		err = ApplyModifyBugs(state, effect, playerID, log)
 	case RevealRoom:

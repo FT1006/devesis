@@ -1,5 +1,7 @@
 package core
 
+import "fmt"
+
 // getCorruptionRoomTargets resolves which rooms are affected by corruption effects
 // For RoomWithMostBugs, it uses spawn-like logic that doesn't require bugs > 0
 func getCorruptionRoomTargets(state *GameState, scope ScopeType, playerID PlayerID) []*RoomState {
@@ -126,6 +128,26 @@ func ApplySetCorrupted(state *GameState, effect Effect, playerID PlayerID, log *
 	return nil
 }
 
+// ApplyOutOfRam forces the room with most enemies out of RAM
+func ApplyOutOfRam(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
+	targets := getRoomTargets(state, effect.Scope, playerID)
+	if len(targets) == 0 {
+		log.Add("⚠️ OutOfRam: No target rooms found for scope %s", getScopeName(effect.Scope))
+		return nil
+	}
+	
+	for _, room := range targets {
+		if !room.OutOfRam {
+			room.OutOfRam = true
+			log.Add("💻 %s forced out of RAM! System crashes will deal extra damage", room.ID)
+		} else {
+			log.Add("💻 %s already out of RAM", room.ID)
+		}
+	}
+	
+	return nil
+}
+
 // getRoomTargets resolves which rooms are affected by the effect
 func getRoomTargets(state *GameState, scope ScopeType, playerID PlayerID) []*RoomState {
 	player := state.Players[playerID]
@@ -162,6 +184,16 @@ func getRoomTargets(state *GameState, scope ScopeType, playerID PlayerID) []*Roo
 		targetRoomID := GetRoomWithMostBugs(state)
 		if targetRoomID == "" {
 			// No rooms have bugs
+			return nil
+		}
+		if room := state.Rooms[targetRoomID]; room != nil {
+			return []*RoomState{room}
+		}
+		return nil
+	case RoomWithMostEnemies:
+		targetRoomID := GetRoomWithMostEnemies(state)
+		if targetRoomID == "" {
+			// No enemies exist
 			return nil
 		}
 		if room := state.Rooms[targetRoomID]; room != nil {

@@ -11,7 +11,7 @@ const (
 	ModifyAmmo
 	DrawCards
 	DiscardCards
-	SkipQuestion
+	OutOfRam
 	ModifyBugs
 	RevealRoom
 	CleanRoom
@@ -29,6 +29,7 @@ const (
 	AdjacentRooms
 	AllRooms
 	RoomWithMostBugs
+	RoomWithMostEnemies
 	AllPlayers
 )
 

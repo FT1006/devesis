@@ -6,13 +6,13 @@ Complete card reference for all 66 cards in the game (now expanded to 86 with en
 
 ## Action Cards (31)
 
-### ACTION_001 – Skip Ahead
+### ACTION_001 – System Overload
 
 • Card ID: ACTION_001
-• Name: Skip Ahead
+• Name: System Overload
 • Category: Action
-• Description: Skip next movement question.
-• Effects: Skip 1 movement question for yourself.
+• Description: Force room with most enemies out of RAM.
+• Effects: Target the room with the most enemies and force it out of RAM, causing system crashes to deal extra damage.
 
 ⸻
 
@@ -36,13 +36,13 @@ Complete card reference for all 66 cards in the game (now expanded to 86 with en
 
 ⸻
 
-### ACTION_004 – Safe Path
+### ACTION_004 – Emergency Shutdown
 
 • Card ID: ACTION_004
-• Name: Safe Path
+• Name: Emergency Shutdown
 • Category: Action
-• Description: Skip question and remove 1 bug from current room.
-• Effects: Skip 1 movement question for yourself and remove 1 bug from your current room.
+• Description: Force crowded room out of RAM and debug current room.
+• Effects: Target the room with the most enemies and force it out of RAM, then remove 1 bug from your current room.
 
 ⸻
 

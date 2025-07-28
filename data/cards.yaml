@@ -5,13 +5,13 @@ cards:
   action:
     # Movement Support Cards (8 cards)
     - id: "ACTION_001"
-      name: "Skip Ahead"
-      desc: "Skip next movement question"
+      name: "System Overload"
+      desc: "Force room with most enemies out of RAM"
       category: "action"
       source: "action"
       fx:
-        - op: "SkipQuestion"
-          scope: "Self"
+        - op: "OutOfRam"
+          scope: "RoomWithMostEnemies"
           n: 1
           
     - id: "ACTION_002"
@@ -35,13 +35,13 @@ cards:
           n: 1
           
     - id: "ACTION_004"
-      name: "Safe Path"
-      desc: "Skip question and remove 1 bug from current room"
+      name: "Emergency Shutdown"
+      desc: "Force crowded room out of RAM and debug current room"
       category: "action"
       source: "action"
       fx:
-        - op: "SkipQuestion"
-          scope: "Self"
+        - op: "OutOfRam"
+          scope: "RoomWithMostEnemies"
           n: 1
         - op: "ModifyBugs"
           scope: "CurrentRoom"
