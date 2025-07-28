@@ -175,6 +175,10 @@ func Apply(state GameState, action Action, log *EffectLog) GameState {
 	case ShootAction, MeleeAction:
 		// Handle combat actions
 		return ApplyCombat(state, a, log)
+		
+	case RoomAction:
+		// Handle room-specific actions
+		return ApplyRoomAction(state, a, log)
 }
 	
 	// Default case - return original state unchanged

@@ -400,127 +400,15 @@ func (g *GameManager) executeRoomAction() error {
 		return fmt.Errorf("no active player")
 	}
 	
-	// Get current room
-	currentRoom := g.state.Rooms[player.Location]
-	if currentRoom == nil {
-		return fmt.Errorf("invalid player location")
+	// Execute room action through core reducer with logging
+	action := core.RoomAction{
+		PlayerID: player.ID,
 	}
 	
-	// Check if room is corrupted
-	if currentRoom.Corrupted {
-		fmt.Println("✗ Cannot use room actions in corrupted rooms!")
-		return nil
-	}
-	
-	// Check if player already used room action this turn
-	if player.SpecialUsed {  // Using existing field temporarily
-		fmt.Println("✗ You've already used your room action this turn!")
-		return nil
-	}
-	
-	// Apply room-specific effect
-	switch currentRoom.Type {
-	case core.MedBay:
-		return g.executeRoomActionMedBay(player, currentRoom)
-	case core.AmmoCache:
-		return g.executeRoomActionAmmoCache(player, currentRoom)
-	case core.CleanRoomType:
-		return g.executeRoomActionCleanRoom(player, currentRoom)
-	default:
-		fmt.Println("✗ No special room action available here.")
-		return nil
-	}
-}
-
-func (g *GameManager) executeRoomActionMedBay(player *core.PlayerState, room *core.RoomState) error {
-	// Check if healing would be beneficial
-	if player.HP >= player.MaxHP {
-		fmt.Println("💡 You're already at full health - MedBay does nothing.")
-		return nil
-	}
-	
-	// Apply healing
-	oldHP := player.HP
-	newHP := player.HP + core.MedBayHealAmount
-	if newHP > player.MaxHP {
-		newHP = player.MaxHP
-	}
-	player.HP = newHP
-	
-	// Mark as used
-	player.SpecialUsed = true
-	
-	fmt.Printf("🏥 MedBay healing! HP: %d → %d (+%d)\n", 
-		oldHP, newHP, newHP-oldHP)
-	fmt.Println("✓ Room action complete (1 action used)")
-	
+	g.ResolveWithLogging(action)
 	return nil
 }
 
-func (g *GameManager) executeRoomActionAmmoCache(player *core.PlayerState, room *core.RoomState) error {
-	// Check if ammo refill would be beneficial
-	if player.Ammo >= player.MaxAmmo {
-		fmt.Println("💡 You're already at full ammo - AmmoCache does nothing.")
-		return nil
-	}
-	
-	// Apply ammo refill
-	oldAmmo := player.Ammo
-	newAmmo := player.Ammo + core.AmmoCacheAmount
-	if newAmmo > player.MaxAmmo {
-		newAmmo = player.MaxAmmo
-	}
-	player.Ammo = newAmmo
-	
-	// Mark as used
-	player.SpecialUsed = true
-	
-	fmt.Printf("🔫 AmmoCache refill! Ammo: %d → %d (+%d)\n", 
-		oldAmmo, newAmmo, newAmmo-oldAmmo)
-	fmt.Println("✓ Room action complete (1 action used)")
-	
-	return nil
-}
-
-func (g *GameManager) executeRoomActionCleanRoom(player *core.PlayerState, room *core.RoomState) error {
-	// Get adjacent rooms
-	adjacentRoomIDs := core.GetAdjacentRooms(player.Location)
-	
-	// Count rooms that have bugs to clean
-	bugsCleaned := 0
-	roomsCleaned := 0
-	
-	fmt.Println("🧹 CleanRoom decontamination activated!")
-	
-	for _, roomID := range adjacentRoomIDs {
-		adjacentRoom := g.state.Rooms[roomID]
-		if adjacentRoom != nil && adjacentRoom.BugMarkers > 0 {
-			oldBugs := adjacentRoom.BugMarkers
-			adjacentRoom.BugMarkers--
-			bugsCleaned++
-			roomsCleaned++
-			
-			// Update corruption status
-			adjacentRoom.Corrupted = adjacentRoom.BugMarkers >= core.BugCorruptionThreshold
-			
-			fmt.Printf("   %s: %d → %d bugs (-1)\n", roomID, oldBugs, adjacentRoom.BugMarkers)
-		} else if adjacentRoom != nil {
-			fmt.Printf("   %s: 0 bugs (no effect)\n", roomID)
-		}
-	}
-	
-	if bugsCleaned == 0 {
-		fmt.Println("💡 No bugs in adjacent rooms - CleanRoom does nothing.")
-		return nil
-	}
-	
-	// Mark as used
-	player.SpecialUsed = true
-	
-	fmt.Printf("✓ Cleaned %d bugs from %d rooms (1 action used)\n", bugsCleaned, roomsCleaned)
-	
-	return nil
-}
 
 func (g *GameManager) executePass() error {
 	player := core.GetActivePlayer(g.state)
