@@ -37,7 +37,7 @@ type EffectSource int
 const (
 	SrcAction EffectSource = iota
 	SrcEvent
-	SrcEnemyAI
+	SrcSpecial
 )
 
 // Effect represents a single effect to apply

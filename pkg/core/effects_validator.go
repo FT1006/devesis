@@ -97,8 +97,8 @@ func isValidPhaseOp(source EffectSource, op EffectOp) bool {
 			}
 		}
 		return false
-	case SrcEnemyAI:
-		return false // Not implemented yet
+	case SrcSpecial:
+		return true // Special cards allow all ops (like action cards)
 	default:
 		return false
 	}
