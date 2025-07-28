@@ -40,7 +40,7 @@ func ApplySearch(state GameState, action SearchAction, rng *rand.Rand) GameState
 	case "R15", "R17", "R18": // Engine rooms EN1, EN2, EN3
 		// Give 3 engine cards (representing all 3 engines)
 		player.Hand = append(player.Hand, "SPECIAL_ENGINE", "SPECIAL_ENGINE", "SPECIAL_ENGINE")
-		enforceHandLimit(player)
+		enforceHandLimitWithDiscard(&player.Hand, &player.Discard)
 		return newState
 	}
 	
@@ -52,7 +52,7 @@ func ApplySearch(state GameState, action SearchAction, rng *rand.Rand) GameState
 		specialCard := selectRandomSpecialCard(rng)
 		if specialCard != "" {
 			player.Hand = append(player.Hand, specialCard)
-			enforceHandLimit(player)
+			enforceHandLimitWithDiscard(&player.Hand, &player.Discard)
 		}
 	}
 	
@@ -114,14 +114,4 @@ func getCardRarity(card Card) string {
 	}
 }
 
-// enforceHandLimit moves excess cards from hand to discard pile if over MaxHandSize
-func enforceHandLimit(player *PlayerState) {
-	if len(player.Hand) > MaxHandSize {
-		excess := len(player.Hand) - MaxHandSize
-		// Move excess cards from beginning of hand to discard pile
-		for i := 0; i < excess; i++ {
-			player.Discard = append(player.Discard, player.Hand[0])
-			player.Hand = player.Hand[1:]
-		}
-	}
-}
+// enforceHandLimit is now replaced by enforceHandLimitWithDiscard in card_utils.go

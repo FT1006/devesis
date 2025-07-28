@@ -1,0 +1,51 @@
+package core
+
+// moveCards removes `count` cards starting at `start` from src,
+// appends them to dst, and returns the removed slice.
+// This handles duplicates correctly by working with indices, not values.
+func moveCards(src *[]CardID, dst *[]CardID, start, count int) []CardID {
+	if count <= 0 || start < 0 || start >= len(*src) {
+		return nil
+	}
+	if start+count > len(*src) {
+		count = len(*src) - start
+	}
+
+	// Copy cards to be moved
+	moved := make([]CardID, count)
+	copy(moved, (*src)[start:start+count])
+
+	// Remove from source
+	*src = append((*src)[:start], (*src)[start+count:]...)
+
+	// Add to destination
+	*dst = append(*dst, moved...)
+
+	return moved
+}
+
+// moveAllCards moves all cards from src to dst
+func moveAllCards(src *[]CardID, dst *[]CardID) []CardID {
+	if len(*src) == 0 {
+		return nil
+	}
+	return moveCards(src, dst, 0, len(*src))
+}
+
+// moveCardByIndex moves a single card at the specified index
+func moveCardByIndex(src *[]CardID, dst *[]CardID, index int) CardID {
+	moved := moveCards(src, dst, index, 1)
+	if len(moved) > 0 {
+		return moved[0]
+	}
+	return ""
+}
+
+// enforceHandLimitWithDiscard ensures hand doesn't exceed MaxHandSize
+// by moving excess cards from the beginning to discard
+func enforceHandLimitWithDiscard(hand *[]CardID, discard *[]CardID) {
+	if len(*hand) > MaxHandSize {
+		overflow := len(*hand) - MaxHandSize
+		moveCards(hand, discard, 0, overflow)
+	}
+}

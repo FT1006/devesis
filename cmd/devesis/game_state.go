@@ -171,12 +171,12 @@ func (g *GameManager) displayStatusPanel(player *core.PlayerState) {
 	lines := make([]string, 0, 4)
 	
 	lines = append(lines,
-		fmt.Sprintf("HP   %2d / %2d     Ammo %2d / %2d        Cards  Hand:%d  Deck:%d  Discard:%d",
-			player.HP, player.MaxHP, player.Ammo, player.MaxAmmo, 
-			len(player.Hand), len(player.Deck), len(player.Discard)),
+		fmt.Sprintf("HP   %2d / %2d     Ammo %2d / %2d   Damage  %d",
+			player.HP, player.MaxHP, player.Ammo, player.MaxAmmo, player.Damage),
 	)
 	lines = append(lines,
-		fmt.Sprintf("Turn   Actions %d / 2", g.state.ActionsLeft),
+		fmt.Sprintf("Turn   Actions %d / 2      Cards  Hand:%d  Deck:%d  Discard:%d", 
+			g.state.ActionsLeft, len(player.Hand), len(player.Deck), len(player.Discard)),
 	)
 	lines = append(lines,
 		fmt.Sprintf("Room   Bugs:%d   Loop:%d   Overflow:%d   Pythogoras:%d   Corrupted: %s",
@@ -230,6 +230,27 @@ func (g *GameManager) getRoomDisplayName(roomID core.RoomID) string {
 }
 
 func (g *GameManager) getRoomTypeDisplayName(room *core.RoomState) string {
+	// Handle predefined rooms first
+	if room.Type == core.Predefined {
+		switch room.ID {
+		case "R01":
+			return "key room"
+		case "R12":
+			return "start room"
+		case "R15":
+			return "engine room"
+		case "R17":
+			return "engine room"
+		case "R18":
+			return "engine room"
+		case "R19", "R20":
+			return "escape room"
+		default:
+			return "special room"
+		}
+	}
+	
+	// Handle regular room types
 	switch room.Type {
 	case core.AmmoCache:
 		return "ammo cache"

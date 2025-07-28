@@ -62,3 +62,9 @@ type InitializeGameAction struct {
 }
 
 func (InitializeGameAction) isAction() {}
+
+type GiveSpecialCardAction struct {
+	PlayerID PlayerID
+}
+
+func (GiveSpecialCardAction) isAction() {}

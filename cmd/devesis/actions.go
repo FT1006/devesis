@@ -81,6 +81,25 @@ func (g *GameManager) executeMove(args []string) error {
 		// Check if answer is correct
 		if core.CheckAnswer(question, choice-1) {
 			fmt.Println("✓ Correct! You may proceed.")
+			// Reward: Give a special card for correct answer using reducer
+			rewardAction := core.GiveSpecialCardAction{
+				PlayerID: core.GetActivePlayer(g.state).ID,
+			}
+			newState := core.Apply(*g.state, rewardAction)
+			
+			// Check if a card was actually added
+			oldPlayer := core.GetActivePlayer(g.state)
+			newPlayer := core.GetActivePlayer(&newState)
+			if len(newPlayer.Hand) > len(oldPlayer.Hand) {
+				// Card was added, show reward message
+				addedCard := newPlayer.Hand[len(newPlayer.Hand)-1]
+				if card, exists := core.CardDB[addedCard]; exists {
+					fmt.Printf("🎁 Reward: **%s** - %s\n", card.Name, card.Description)
+				} else {
+					fmt.Printf("🎁 Reward: Special card added to hand!\n")
+				}
+			}
+			g.state = &newState
 		} else {
 			fmt.Println("✗ Incorrect answer! Bugs spread everywhere...")
 			// Update state to mark question as used
@@ -226,7 +245,12 @@ func (g *GameManager) executeSearch() error {
 		g.state = &newState
 		fmt.Println("🔍 You search the room thoroughly...")
 		
-		if cardsAfter > cardsBefore {
+		// Check for special room outcomes first
+		if player.Location == "R01" && newPlayer.Damage > player.Damage {
+			// BOOT.dev KEY found and auto-consumed
+			fmt.Printf("🔑 Found the **BOOT.dev KEY**!\n")
+			fmt.Printf("⚡ Auto-consumed! Your damage increased from %d to %d!\n", player.Damage, newPlayer.Damage)
+		} else if cardsAfter > cardsBefore {
 			// Found a card!
 			newCardID := newPlayer.Hand[cardsAfter-1] // Last card added
 			if card, exists := core.CardDB[newCardID]; exists {
@@ -236,7 +260,7 @@ func (g *GameManager) executeSearch() error {
 				fmt.Println("💎 Found a special card!")
 			}
 		} else {
-			// No card found
+			// No card found and no special effect
 			fmt.Println("❌ Nothing useful found in this room.")
 		}
 	} else {
@@ -417,9 +441,18 @@ func (g *GameManager) executePlayCard(args []string) error {
 	}
 	
 	newState := core.Apply(*g.state, action)
+	
+	// Debug: Check if card went to discard
+	oldDiscardCount := len(player.Discard)
+	newPlayer := core.GetActivePlayer(&newState)
+	newDiscardCount := len(newPlayer.Discard)
+	
 	g.state = &newState
 	
 	fmt.Printf("✓ Played %s\n", card.Name)
+	if newDiscardCount > oldDiscardCount {
+		fmt.Printf("   (Card moved to discard pile - now %d cards in discard)\n", newDiscardCount)
+	}
 	return nil
 }
 

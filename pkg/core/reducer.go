@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"math/rand"
 )
 
@@ -33,9 +32,6 @@ func Apply(state GameState, action Action) GameState {
 			rng := rand.New(rand.NewSource(newState.RandSeed + int64(newState.Round)*1000 + int64(len(newState.Players))))
 			bugOutcome := rng.Intn(3) // 0, 1, or 2
 			
-			// Debug output (temporary)
-			fmt.Printf("🐛 Movement consequence: outcome %d ", bugOutcome)
-			
 			switch bugOutcome {
 			case 0:
 				// 1 bug in current room (where player moved FROM)
@@ -44,7 +40,6 @@ func Apply(state GameState, action Action) GameState {
 					if oldRoom.BugMarkers > MaxBugMarkers {
 						oldRoom.BugMarkers = MaxBugMarkers
 					}
-					fmt.Printf("- added 1 bug to %s\n", oldLocation)
 				}
 			case 1:
 				// 1 bug in max 2 surrounding rooms of old location
@@ -69,16 +64,46 @@ func Apply(state GameState, action Action) GameState {
 							if room.BugMarkers > MaxBugMarkers {
 								room.BugMarkers = MaxBugMarkers
 							}
-							fmt.Printf("- added 1 bug to %s ", shuffledRooms[i])
 						}
 					}
-					fmt.Printf("\n")
 				}
 			case 2:
 				// Safe - no bugs added
-				fmt.Printf("- safe movement!\n")
 			}
 		}
+		return newState
+
+	case GiveSpecialCardAction:
+		// Deep copy the state to avoid mutations
+		newState := deepCopyGameState(state)
+		player, exists := newState.Players[a.PlayerID]
+		if !exists {
+			return newState
+		}
+
+		// Use game RNG to select random special card
+		rng := rand.New(rand.NewSource(newState.RandSeed + int64(newState.Round)*500 + int64(len(newState.Players))))
+		
+		// Collect all special card IDs
+		specialCards := make([]CardID, 0)
+		for cardID, card := range CardDB {
+			if card.Source == SrcSpecial {
+				specialCards = append(specialCards, cardID)
+			}
+		}
+		
+		if len(specialCards) > 0 {
+			// Pick random special card
+			cardIndex := rng.Intn(len(specialCards))
+			selectedCard := specialCards[cardIndex]
+			
+			// Add to hand
+			player.Hand = append(player.Hand, selectedCard)
+			
+			// Enforce hand limit
+			enforceHandLimitWithDiscard(&player.Hand, &player.Discard)
+		}
+		
 		return newState
 		
 	case SearchAction:
@@ -108,8 +133,8 @@ func Apply(state GameState, action Action) GameState {
 			return newState
 		}
 
-		// Remove card from hand
-		player.Hand = append(player.Hand[:cardIndex], player.Hand[cardIndex+1:]...)
+		// Move card from hand to discard pile using helper
+		moveCardByIndex(&player.Hand, &player.Discard, cardIndex)
 
 		// Check for engine card usage at escape room
 		if a.CardID == "SPECIAL_ENGINE" {

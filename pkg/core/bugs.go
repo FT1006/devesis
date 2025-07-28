@@ -124,9 +124,13 @@ func PlaceBugsInSpecificRooms(state *GameState, roomIDs []RoomID) {
 		// Check if room is corrupted before adding bug
 		wasCorruptedBefore := room.Corrupted
 		
-		// Add bug marker (max 9)
-		if room.BugMarkers < MaxBugMarkers {
-			room.BugMarkers++
+		// Add 2 bug markers (max 9) - increased penalty for wrong answers
+		bugsToAdd := uint8(2)
+		if room.BugMarkers + bugsToAdd > MaxBugMarkers {
+			bugsToAdd = MaxBugMarkers - room.BugMarkers
+		}
+		if bugsToAdd > 0 {
+			room.BugMarkers += bugsToAdd
 			
 			// Check corruption threshold
 			if room.BugMarkers >= BugCorruptionThreshold {
@@ -156,8 +160,8 @@ func ApplyWrongAnswerPenalties(state *GameState, targetRoom RoomID) {
 	// Use proper bug placement (respects limits, handles corruption, triggers spawns)
 	PlaceBugsInSpecificRooms(state, roomsToInfect)
 	
-	// Drop all cards from active player's hand
+	// Drop all cards from active player's hand to discard pile
 	if player := GetActivePlayer(state); player != nil {
-		player.Hand = []CardID{}
+		moveAllCards(&player.Hand, &player.Discard)
 	}
 }

@@ -42,23 +42,21 @@ func ApplyDrawCards(state *GameState, effect Effect, playerID PlayerID) error {
 	return nil
 }
 
-// ApplyDiscardCards removes cards from hand
+// ApplyDiscardCards removes cards from hand and moves them to discard pile
 func ApplyDiscardCards(state *GameState, effect Effect, playerID PlayerID) error {
 	targets := getPlayerTargets(state, effect.Scope, playerID)
 	for _, player := range targets {
 		if effect.N == ALL {
-			// Remove all cards
-			player.Hand = []CardID{}
+			// Move all cards to discard pile
+			moveAllCards(&player.Hand, &player.Discard)
 		} else {
+			// Move cards from beginning of hand to discard pile (deterministic for testing)
 			cardsToDiscard := effect.N
 			if cardsToDiscard > len(player.Hand) {
 				cardsToDiscard = len(player.Hand)
 			}
-			// Remove cards from beginning of hand
 			if cardsToDiscard > 0 {
-				newHand := make([]CardID, len(player.Hand)-cardsToDiscard)
-				copy(newHand, player.Hand[cardsToDiscard:])
-				player.Hand = newHand
+				moveCards(&player.Hand, &player.Discard, 0, cardsToDiscard)
 			}
 		}
 	}
