@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mattn/go-runewidth"
 	"github.com/spaceship/devesis/pkg/core"
 )
 
@@ -117,7 +118,12 @@ func (g *GameManager) displayHandStatus(player *core.PlayerState) {
 	}
 }
 
+// helper – visible width in cells, not bytes
+func cells(s string) int { return runewidth.StringWidth(s) }
+
 func (g *GameManager) displayStatusPanel(player *core.PlayerState) {
+	const minWidth = 72  // never shrink below this
+	
 	// Get room info
 	room := g.state.Rooms[player.Location]
 	roomType := ""
@@ -161,59 +167,48 @@ func (g *GameManager) displayStatusPanel(player *core.PlayerState) {
 		corruptedStatus = "✓"
 	}
 	
-	// Get class name
-	className := g.getClassDisplayName(player.Class)
+	// ➊ create the raw content **without** borders
+	lines := make([]string, 0, 4)
 	
-	// Fixed width panel (70 characters total)
-	const panelWidth = 70
+	lines = append(lines,
+		fmt.Sprintf("HP   %2d / %2d     Ammo %2d / %2d        Cards  Hand:%d  Deck:%d  Discard:%d",
+			player.HP, player.MaxHP, player.Ammo, player.MaxAmmo, 
+			len(player.Hand), len(player.Deck), len(player.Discard)),
+	)
+	lines = append(lines,
+		fmt.Sprintf("Turn   Actions %d / 2", g.state.ActionsLeft),
+	)
+	lines = append(lines,
+		fmt.Sprintf("Room   Bugs:%d   Loop:%d   Overflow:%d   Pythogoras:%d   Corrupted: %s",
+			room.BugMarkers, loopCount, overflowCount, pythogorasCount, corruptedStatus),
+	)
+	lines = append(lines,
+		fmt.Sprintf("Game   Round: %d      Rounds left: %d", 
+			g.state.Round, roundsLeft),
+	)
 	
-	// Build the bordered panel
-	topBorder := fmt.Sprintf("┌─────────────── P1 %s ── Room %s (%s, %s) ", 
-		className, player.Location, roomType, searchStatus)
-	topPadding := panelWidth - len(topBorder) - 1
-	if topPadding > 0 {
-		topBorder += strings.Repeat("─", topPadding)
-	}
-	topBorder += "┐"
-	
-	line1 := fmt.Sprintf("│ HP   %2d / %2d     Ammo %2d / %2d        Cards  Hand:%d  Deck:%d  Disc:%d",
-		player.HP, player.MaxHP, player.Ammo, player.MaxAmmo, 
-		len(player.Hand), len(player.Deck), len(player.Discard))
-	line1 = g.padLine(line1, panelWidth)
-	
-	line2 := fmt.Sprintf("│ Turn   Actions %d / 2", g.state.ActionsLeft)
-	line2 = g.padLine(line2, panelWidth)
-	
-	line3 := fmt.Sprintf("│ Room   Bugs:%d   Loop:%d   Overflow:%d   Pythogoras:%d   Corrupted: %s",
-		room.BugMarkers, loopCount, overflowCount, pythogorasCount, corruptedStatus)
-	line3 = g.padLine(line3, panelWidth)
-	
-	line4 := fmt.Sprintf("│ Game   Round: %d      Rounds left: %d", 
-		g.state.Round, roundsLeft)
-	line4 = g.padLine(line4, panelWidth)
-	
-	bottomBorder := "└" + strings.Repeat("─", panelWidth-2) + "┘"
-	
-	// Print the panel
-	fmt.Printf("\n%s\n", topBorder)
-	fmt.Printf("%s\n", line1)  
-	fmt.Printf("%s\n", line2)
-	fmt.Printf("%s\n", line3)
-	fmt.Printf("%s\n", line4)
-	fmt.Printf("%s\n", bottomBorder)
-}
-
-func (g *GameManager) padLine(line string, targetWidth int) string {
-	padding := targetWidth - len(line) - 1
-	if padding < 0 {
-		// Line is too long, truncate it
-		maxContent := targetWidth - 3 // "│" + content + "│"
-		if maxContent > 0 {
-			line = line[:maxContent] + "…"
+	// ➊ work out how wide the panel really needs to be
+	width := minWidth
+	for _, l := range lines {
+		if w := cells(l) + 2; w > width { // +2 for the side borders
+			width = w
 		}
-		padding = 0
 	}
-	return line + strings.Repeat(" ", padding) + "│"
+	
+	// ➌ print top border
+	className := g.getClassDisplayName(player.Class)
+	header := fmt.Sprintf(" P1 %s ── Room %s (%s, %s) ",
+		className, player.Location, roomType, searchStatus)
+	pad := width - cells(header) - 2          // 2 for corner chars
+	fmt.Printf("\n┌%s%s┐\n", header, strings.Repeat("─", pad))
+	
+	// ➍ print each content line
+	for _, l := range lines {
+		fmt.Printf("│%-*s│\n", width-2, l)     // %-*s pads to full width
+	}
+	
+	// ➎ bottom border
+	fmt.Printf("└%s┘\n", strings.Repeat("─", width-2))
 }
 
 func (g *GameManager) getRoomDisplayName(roomID core.RoomID) string {
