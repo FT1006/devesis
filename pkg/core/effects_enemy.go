@@ -33,6 +33,8 @@ func ApplySpawnEnemy(state *GameState, effect Effect, playerID PlayerID, log *Ef
 			Location: room.ID,
 		}
 		state.Enemies[enemyID] = enemy
+		
+		log.Add("👹 %s spawned in %s", getEnemyDisplayName(enemyType), room.ID)
 	}
 	return nil
 }

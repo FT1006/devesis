@@ -8,6 +8,7 @@ func ApplyModifyBugs(state *GameState, effect Effect, playerID PlayerID, log *Ef
 			continue // Skip OutOfRam rooms
 		}
 		
+		oldBugs := room.BugMarkers
 		var newBugs uint8
 		if effect.N == ALL {
 			newBugs = 0
@@ -26,6 +27,16 @@ func ApplyModifyBugs(state *GameState, effect Effect, playerID PlayerID, log *Ef
 		
 		// Auto-corruption at 3+ bugs
 		room.Corrupted = newBugs >= BugCorruptionThreshold
+		
+		if oldBugs != newBugs {
+			if effect.N == ALL {
+				log.Add("🪫 %s bugs: %d → 0 (cleared)", room.ID, oldBugs)
+			} else if effect.N > 0 {
+				log.Add("🪫 %s bugs: %d → %d (+%d)", room.ID, oldBugs, newBugs, effect.N)
+			} else {
+				log.Add("🪫 %s bugs: %d → %d (%d)", room.ID, oldBugs, newBugs, effect.N)
+			}
+		}
 	}
 	return nil
 }
@@ -34,7 +45,10 @@ func ApplyModifyBugs(state *GameState, effect Effect, playerID PlayerID, log *Ef
 func ApplyRevealRoom(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
 	targets := getRoomTargets(state, effect.Scope, playerID)
 	for _, room := range targets {
-		room.Explored = true
+		if !room.Explored {
+			room.Explored = true
+			log.Add("🗺️ %s revealed", room.ID)
+		}
 	}
 	return nil
 }
@@ -43,8 +57,12 @@ func ApplyRevealRoom(state *GameState, effect Effect, playerID PlayerID, log *Ef
 func ApplyCleanRoom(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
 	targets := getRoomTargets(state, effect.Scope, playerID)
 	for _, room := range targets {
+		oldBugs := room.BugMarkers
 		room.BugMarkers = 0
 		room.Corrupted = false
+		if oldBugs > 0 {
+			log.Add("🧹 %s cleaned: %d bugs removed", room.ID, oldBugs)
+		}
 	}
 	return nil
 }
@@ -53,10 +71,19 @@ func ApplyCleanRoom(state *GameState, effect Effect, playerID PlayerID, log *Eff
 func ApplySetCorrupted(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
 	targets := getRoomTargets(state, effect.Scope, playerID)
 	for _, room := range targets {
+		oldCorrupted := room.Corrupted
 		if effect.N == 1 {
 			room.Corrupted = true
 		} else if effect.N == 0 && room.BugMarkers < BugCorruptionThreshold {
 			room.Corrupted = false
+		}
+		
+		if oldCorrupted != room.Corrupted {
+			if room.Corrupted {
+				log.Add("⚠️ %s corrupted", room.ID)
+			} else {
+				log.Add("✨ %s restored", room.ID)
+			}
 		}
 	}
 	return nil

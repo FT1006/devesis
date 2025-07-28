@@ -33,6 +33,7 @@ func ApplyModifyHP(state *GameState, effect Effect, playerID PlayerID, log *Effe
 func ApplyModifyAmmo(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
 	targets := getPlayerTargets(state, effect.Scope, playerID)
 	for _, player := range targets {
+		oldAmmo := player.Ammo
 		newAmmo := int(player.Ammo) + effect.N
 		if newAmmo < 0 {
 			newAmmo = 0
@@ -41,6 +42,14 @@ func ApplyModifyAmmo(state *GameState, effect Effect, playerID PlayerID, log *Ef
 			newAmmo = int(player.MaxAmmo)
 		}
 		player.Ammo = uint8(newAmmo)
+		
+		if oldAmmo != player.Ammo {
+			if effect.N > 0 {
+				log.Add("🔫 %s ammo: %d → %d (+%d)", player.ID, oldAmmo, player.Ammo, effect.N)
+			} else {
+				log.Add("🔫 %s ammo: %d → %d (%d)", player.ID, oldAmmo, player.Ammo, effect.N)
+			}
+		}
 	}
 	return nil
 }
@@ -53,10 +62,16 @@ func ApplyDrawCards(state *GameState, effect Effect, playerID PlayerID, log *Eff
 	rng := GetGameRNG(state)
 	
 	for _, player := range targets {
+		oldHandSize := len(player.Hand)
 		drawCards(&player.Hand, &player.Deck, &player.Discard, effect.N, rng)
 		
 		// Enforce hand limit if drawing would exceed it
 		enforceHandLimitWithDiscard(&player.Hand, &player.Discard)
+		
+		cardsDrawn := len(player.Hand) - oldHandSize
+		if cardsDrawn > 0 {
+			log.Add("🃏 %s draws %d cards", player.ID, cardsDrawn)
+		}
 	}
 	
 	return nil
@@ -66,9 +81,11 @@ func ApplyDrawCards(state *GameState, effect Effect, playerID PlayerID, log *Eff
 func ApplyDiscardCards(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
 	targets := getPlayerTargets(state, effect.Scope, playerID)
 	for _, player := range targets {
+		oldHandSize := len(player.Hand)
 		if effect.N == ALL {
 			// Move all cards to discard pile
 			moveAllCards(&player.Hand, &player.Discard)
+			log.Add("🗑️ %s discards all %d cards", player.ID, oldHandSize)
 		} else {
 			// Move cards from beginning of hand to discard pile (deterministic for testing)
 			cardsToDiscard := effect.N
@@ -77,6 +94,7 @@ func ApplyDiscardCards(state *GameState, effect Effect, playerID PlayerID, log *
 			}
 			if cardsToDiscard > 0 {
 				moveCards(&player.Hand, &player.Discard, 0, cardsToDiscard)
+				log.Add("🗑️ %s discards %d cards", player.ID, cardsToDiscard)
 			}
 		}
 	}
