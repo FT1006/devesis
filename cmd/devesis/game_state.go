@@ -19,8 +19,19 @@ func NewGameManager() *GameManager {
 }
 
 func (g *GameManager) Initialize() error {
+	// ASCII Art Title
+	fmt.Print(`
+████████▄     ▄████████  ▄█    █▄     ▄████████    ▄████████  ▄█     ▄████████ 
+███   ▀███   ███    ███ ███    ███   ███    ███   ███    ███ ███    ███    ███ 
+███    ███   ███    █▀  ███    ███   ███    █▀    ███    █▀  ███▌   ███    █▀  
+███    ███  ▄███▄▄▄     ███    ███  ▄███▄▄▄       ███        ███▌   ███        
+███    ███ ▀▀███▀▀▀     ███    ███ ▀▀███▀▀▀     ▀███████████ ███▌ ▀███████████ 
+███    ███   ███    █▄  ███    ███   ███    █▄           ███ ███           ███ 
+███   ▄███   ███    ███ ███    ███   ███    ███    ▄█    ███ ███     ▄█    ███ 
+████████▀    ██████████  ▀██████▀    ██████████  ▄████████▀  █▀    ▄████████▀
+`)
 	fmt.Println("Welcome to Devesis: Tutorial Hell!")
-	fmt.Println("Escape the corrupted spaceship before time runs out!\n")
+	fmt.Println("Escape Tutorial Hell before your sanity.exe stops responding!\n")
 	
 	// Load card database
 	if err := core.LoadCards("./data"); err != nil {
