@@ -5,9 +5,10 @@ import (
 )
 
 // ApplyModifyHP changes player health points
-func ApplyModifyHP(state *GameState, effect Effect, playerID PlayerID) error {
+func ApplyModifyHP(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
 	targets := getPlayerTargets(state, effect.Scope, playerID)
 	for _, player := range targets {
+		oldHP := player.HP
 		newHP := int(player.HP) + effect.N
 		if newHP < 0 {
 			newHP = 0
@@ -16,12 +17,20 @@ func ApplyModifyHP(state *GameState, effect Effect, playerID PlayerID) error {
 			newHP = int(player.MaxHP)
 		}
 		player.HP = uint8(newHP)
+		
+		if oldHP != player.HP {
+			if effect.N > 0 {
+				log.Add("🩹 %s HP: %d → %d (+%d)", player.ID, oldHP, player.HP, effect.N)
+			} else {
+				log.Add("💔 %s HP: %d → %d (%d)", player.ID, oldHP, player.HP, effect.N)
+			}
+		}
 	}
 	return nil
 }
 
 // ApplyModifyAmmo changes player ammunition
-func ApplyModifyAmmo(state *GameState, effect Effect, playerID PlayerID) error {
+func ApplyModifyAmmo(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
 	targets := getPlayerTargets(state, effect.Scope, playerID)
 	for _, player := range targets {
 		newAmmo := int(player.Ammo) + effect.N
@@ -37,7 +46,7 @@ func ApplyModifyAmmo(state *GameState, effect Effect, playerID PlayerID) error {
 }
 
 // ApplyDrawCards draws cards from deck to hand
-func ApplyDrawCards(state *GameState, effect Effect, playerID PlayerID) error {
+func ApplyDrawCards(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
 	targets := getPlayerTargets(state, effect.Scope, playerID)
 	
 	// Create RNG for deterministic card drawing
@@ -54,7 +63,7 @@ func ApplyDrawCards(state *GameState, effect Effect, playerID PlayerID) error {
 }
 
 // ApplyDiscardCards removes cards from hand and moves them to discard pile
-func ApplyDiscardCards(state *GameState, effect Effect, playerID PlayerID) error {
+func ApplyDiscardCards(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
 	targets := getPlayerTargets(state, effect.Scope, playerID)
 	for _, player := range targets {
 		if effect.N == ALL {
@@ -75,7 +84,7 @@ func ApplyDiscardCards(state *GameState, effect Effect, playerID PlayerID) error
 }
 
 // ApplySkipQuestion allows bypassing movement questions
-func ApplySkipQuestion(state *GameState, effect Effect, playerID PlayerID) error {
+func ApplySkipQuestion(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
 	if effect.Scope != Self {
 		return fmt.Errorf("SkipQuestion only valid with Self scope")
 	}

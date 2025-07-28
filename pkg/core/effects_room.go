@@ -1,7 +1,7 @@
 package core
 
 // ApplyModifyBugs adds or removes bug markers from rooms
-func ApplyModifyBugs(state *GameState, effect Effect, playerID PlayerID) error {
+func ApplyModifyBugs(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
 	targets := getRoomTargets(state, effect.Scope, playerID)
 	for _, room := range targets {
 		if room.OutOfRam {
@@ -31,7 +31,7 @@ func ApplyModifyBugs(state *GameState, effect Effect, playerID PlayerID) error {
 }
 
 // ApplyRevealRoom marks rooms as explored
-func ApplyRevealRoom(state *GameState, effect Effect, playerID PlayerID) error {
+func ApplyRevealRoom(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
 	targets := getRoomTargets(state, effect.Scope, playerID)
 	for _, room := range targets {
 		room.Explored = true
@@ -40,7 +40,7 @@ func ApplyRevealRoom(state *GameState, effect Effect, playerID PlayerID) error {
 }
 
 // ApplyCleanRoom removes all bugs from rooms
-func ApplyCleanRoom(state *GameState, effect Effect, playerID PlayerID) error {
+func ApplyCleanRoom(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
 	targets := getRoomTargets(state, effect.Scope, playerID)
 	for _, room := range targets {
 		room.BugMarkers = 0
@@ -50,7 +50,7 @@ func ApplyCleanRoom(state *GameState, effect Effect, playerID PlayerID) error {
 }
 
 // ApplySetCorrupted forces rooms into/out of corrupted state
-func ApplySetCorrupted(state *GameState, effect Effect, playerID PlayerID) error {
+func ApplySetCorrupted(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
 	targets := getRoomTargets(state, effect.Scope, playerID)
 	for _, room := range targets {
 		if effect.N == 1 {

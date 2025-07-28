@@ -5,7 +5,7 @@ import (
 )
 
 // ApplySpawnEnemy creates new enemies in target locations  
-func ApplySpawnEnemy(state *GameState, effect Effect, playerID PlayerID) error {
+func ApplySpawnEnemy(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
 	targets := getRoomTargets(state, effect.Scope, playerID)
 	for _, room := range targets {
 		// Convert N to enemy type

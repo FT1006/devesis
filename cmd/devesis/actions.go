@@ -125,7 +125,7 @@ func (g *GameManager) executeMove(args []string) error {
 	if newPlayer.Location == core.RoomID(targetRoom) {
 		// Show room type discovery if it's newly explored
 		if room := g.state.Rooms[core.RoomID(targetRoom)]; room != nil && room.Explored {
-			fmt.Printf("📍 You discover this is a %s.\n", g.getRoomTypeName(room.Type))
+			fmt.Printf("📍 You discover this is a %s.\n", g.getRoomTypeName(room))
 		}
 	} else {
 		fmt.Printf("✗ Movement to %s failed.\n", targetRoom)
@@ -175,8 +175,25 @@ func (g *GameManager) applyWrongAnswerPenalties(targetRoom core.RoomID) error {
 	return nil
 }
 
-func (g *GameManager) getRoomTypeName(roomType core.RoomType) string {
-	switch roomType {
+func (g *GameManager) getRoomTypeName(room *core.RoomState) string {
+	// Handle predefined rooms first
+	if room.Type == core.Predefined {
+		switch room.ID {
+		case "R01":
+			return "key room"
+		case "R12":
+			return "start room"
+		case "R15", "R17", "R18":
+			return "engine room"
+		case "R19", "R20":
+			return "escape room"
+		default:
+			return "special room"
+		}
+	}
+	
+	// Handle regular room types
+	switch room.Type {
 	case core.AmmoCache:
 		return "Ammo Cache"
 	case core.MedBay:
@@ -430,25 +447,14 @@ func (g *GameManager) executePlayCard(args []string) error {
 		return nil
 	}
 	
-	// Execute play card action
+	// Execute play card action with logging
 	action := core.PlayCardAction{
 		PlayerID: player.ID,
 		CardID:   cardID,
 	}
 	
-	newState := core.ApplyWithoutLog(*g.state, action)
-	
-	// Debug: Check if card went to discard
-	oldDiscardCount := len(player.Discard)
-	newPlayer := core.GetActivePlayer(&newState)
-	newDiscardCount := len(newPlayer.Discard)
-	
-	g.state = &newState
-	
-	fmt.Printf("✓ Played %s\n", card.Name)
-	if newDiscardCount > oldDiscardCount {
-		fmt.Printf("   (Card moved to discard pile - now %d cards in discard)\n", newDiscardCount)
-	}
+	fmt.Printf("✓ Playing %s\n", card.Name)
+	g.ResolveWithLogging(action)
 	return nil
 }
 

@@ -139,6 +139,7 @@ func Apply(state GameState, action Action, log *EffectLog) GameState {
 
 		// Move card from hand to discard pile using helper
 		moveCardByIndex(&player.Hand, &player.Discard, cardIndex)
+		log.Add("🃏 %s plays %s", a.PlayerID, a.CardID)
 
 		// Check for engine card usage at escape room
 		if a.CardID == "SPECIAL_ENGINE" {
@@ -153,13 +154,14 @@ func Apply(state GameState, action Action, log *EffectLog) GameState {
 				}
 				if !pythogorasInEscapeRoom {
 					player.EngineUsed = true // Mark as victory condition met
+					log.Add("🚀 Engine activated! Victory condition met")
 				}
 			}
 		}
 
 		// Apply card effects using the effects engine
 		if card, exists := CardDB[a.CardID]; exists {
-			newState = ApplyCardEffects(newState, card, a.PlayerID)
+			newState = ApplyCardEffects(newState, card, a.PlayerID, log)
 		}
 
 		return newState
