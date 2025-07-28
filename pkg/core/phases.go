@@ -238,10 +238,3 @@ func getEnemyTypeName(enemyType EnemyType) string {
 	}
 }
 
-// shuffleCards shuffles a slice of CardIDs using Fisher-Yates algorithm
-func shuffleCards(cards []CardID, rng *rand.Rand) {
-	for i := len(cards) - 1; i > 0; i-- {
-		j := rng.Intn(i + 1)
-		cards[i], cards[j] = cards[j], cards[i]
-	}
-}

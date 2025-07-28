@@ -1,5 +1,9 @@
 package core
 
+import (
+	"math/rand"
+)
+
 // moveCards removes `count` cards starting at `start` from src,
 // appends them to dst, and returns the removed slice.
 // This handles duplicates correctly by working with indices, not values.
@@ -47,5 +51,21 @@ func enforceHandLimitWithDiscard(hand *[]CardID, discard *[]CardID) {
 	if len(*hand) > MaxHandSize {
 		overflow := len(*hand) - MaxHandSize
 		moveCards(hand, discard, 0, overflow)
+	}
+}
+
+// shuffleCards shuffles a slice of CardIDs using Fisher-Yates algorithm
+func shuffleCards(cards []CardID, rng *rand.Rand) {
+	for i := len(cards) - 1; i > 0; i-- {
+		j := rng.Intn(i + 1)
+		cards[i], cards[j] = cards[j], cards[i]
+	}
+}
+
+// shuffleRooms shuffles a slice of RoomIDs using Fisher-Yates algorithm
+func shuffleRooms(rooms []RoomID, rng *rand.Rand) {
+	for i := len(rooms) - 1; i > 0; i-- {
+		j := rng.Intn(i + 1)
+		rooms[i], rooms[j] = rooms[j], rooms[i]
 	}
 }

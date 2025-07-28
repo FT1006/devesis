@@ -48,10 +48,7 @@ func Apply(state GameState, action Action) GameState {
 					// Shuffle adjacent rooms and pick max 2
 					shuffledRooms := make([]RoomID, len(adjacentRooms))
 					copy(shuffledRooms, adjacentRooms)
-					for i := len(shuffledRooms) - 1; i > 0; i-- {
-						j := rng.Intn(i + 1)
-						shuffledRooms[i], shuffledRooms[j] = shuffledRooms[j], shuffledRooms[i]
-					}
+					shuffleRooms(shuffledRooms, rng)
 					
 					maxRooms := 2
 					if len(shuffledRooms) < maxRooms {
