@@ -64,46 +64,51 @@ func ApplySpawnEnemy(state *GameState, effect Effect, playerID PlayerID, log *Ef
 
 // ApplyMoveEnemies moves all enemies N steps toward players using the movement system
 func ApplyMoveEnemies(state *GameState, effect Effect, playerID PlayerID, log *EffectLog) error {
-	log.Add("🚶 MoveEnemies: Processing %d enemies", len(state.Enemies))
-	moveCount := 0
+	maxStep := effect.N
+	moved := 0
+
 	for _, enemy := range state.Enemies {
-		log.Add("🚶 Processing %s at %s", getEnemyDisplayName(enemy.Type), enemy.Location)
-		// Find closest living player
-		var closestPlayer RoomID
-		minDistance := effect.N + 1
-		
+		// 1️⃣ Find shortest path to ANY living player (no step limit)
+		bestPath := PathResult{} // PathResult{Valid bool, Path []RoomID}
+		bestLen := 999           // Use large number instead of math.MaxInt for simplicity
+
 		for _, player := range state.Players {
-			if player.HP > 0 {
-				path := CanTraverse(state, PathQuery{From: enemy.Location, To: player.Location, MaxSteps: effect.N})
-				if path.Valid && len(path.Path)-1 < minDistance {
-					closestPlayer = player.Location
-					minDistance = len(path.Path) - 1
-				}
+			if player.HP == 0 {
+				continue // Skip dead players
+			}
+			path := CanTraverse(state, PathQuery{
+				From:     enemy.Location,
+				To:       player.Location,
+				MaxSteps: 99, // Effectively no cap - find any reachable player
+			})
+			if !path.Valid {
+				continue // Player not reachable
+			}
+			if pathLen := len(path.Path) - 1; pathLen < bestLen {
+				bestLen, bestPath = pathLen, path
 			}
 		}
-		
-		if closestPlayer == "" {
-			continue
+
+		if !bestPath.Valid {
+			continue // No reachable player found
 		}
-		
-		// Move toward closest player
-		path := CanTraverse(state, PathQuery{From: enemy.Location, To: closestPlayer, MaxSteps: effect.N})
-		if path.Valid && len(path.Path) > 1 {
-			oldLocation := enemy.Location
-			maxIndex := effect.N
-			if len(path.Path)-1 < maxIndex {
-				maxIndex = len(path.Path) - 1
-			}
-			enemy.Location = path.Path[maxIndex]
-			
-			if oldLocation != enemy.Location {
-				log.Add("🚶 %s moves %s → %s", getEnemyDisplayName(enemy.Type), oldLocation, enemy.Location)
-				moveCount++
-			}
+
+		// 2️⃣ Move up to N steps along that path
+		step := maxStep
+		if bestLen < step {
+			step = bestLen // Can't move more steps than path length
 		}
+		if step == 0 {
+			continue // Already at player location
+		}
+
+		oldLocation := enemy.Location
+		enemy.Location = bestPath.Path[step]
+		log.Add("🚶 %s moves %s → %s", getEnemyDisplayName(enemy.Type), oldLocation, enemy.Location)
+		moved++
 	}
 	
-	log.Add("🚶 %d enemies moved", moveCount)
+	log.Add("🚶 %d enemies moved", moved)
 	return nil
 }
 
