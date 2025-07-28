@@ -30,7 +30,7 @@
 
 ```bash
 # Clone and run immediately
-git clone https://github.com/yourusername/devesis.git
+git clone https://github.com/FT1006/devesis.git
 cd devesis
 go run ./cmd/devesis
 
