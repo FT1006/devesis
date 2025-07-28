@@ -37,16 +37,18 @@ func Apply(state GameState, action Action, log *EffectLog) GameState {
 			switch bugOutcome {
 			case 0:
 				// 1 bug in current room (where player moved FROM)
+				log.Add("⚠️ Movement consequence: Bug left behind in departure room")
 				if oldRoom := newState.Rooms[oldLocation]; oldRoom != nil {
 					oldBugs := oldRoom.BugMarkers
 					oldRoom.BugMarkers += 1
 					if oldRoom.BugMarkers > MaxBugMarkers {
 						oldRoom.BugMarkers = MaxBugMarkers
 					}
-					log.Add("🪲 %s bugs: %d → %d", oldLocation, oldBugs, oldRoom.BugMarkers)
+					log.Add("🪲 %s bugs: %d → %d (left behind)", oldLocation, oldBugs, oldRoom.BugMarkers)
 				}
 			case 1:
 				// 1 bug in max 2 surrounding rooms of old location
+				log.Add("⚠️ Movement consequence: Bugs spread to adjacent rooms")
 				adjacentRooms := GetAdjacentRooms(oldLocation)
 				if len(adjacentRooms) > 0 {
 					// Shuffle adjacent rooms and pick max 2
@@ -59,6 +61,7 @@ func Apply(state GameState, action Action, log *EffectLog) GameState {
 						maxRooms = len(shuffledRooms)
 					}
 					
+					bugsSpread := 0
 					for i := 0; i < maxRooms; i++ {
 						if room := newState.Rooms[shuffledRooms[i]]; room != nil {
 							oldBugs := room.BugMarkers
@@ -66,13 +69,17 @@ func Apply(state GameState, action Action, log *EffectLog) GameState {
 							if room.BugMarkers > MaxBugMarkers {
 								room.BugMarkers = MaxBugMarkers
 							}
-							log.Add("🪲 %s bugs: %d → %d", shuffledRooms[i], oldBugs, room.BugMarkers)
+							log.Add("🪲 %s bugs: %d → %d (spread from %s)", shuffledRooms[i], oldBugs, room.BugMarkers, oldLocation)
+							bugsSpread++
 						}
+					}
+					if bugsSpread > 0 {
+						log.Add("📡 %d adjacent room(s) affected by movement", bugsSpread)
 					}
 				}
 			case 2:
 				// Safe - no bugs added
-				log.Add("✅ Safe movement (no bugs)")
+				log.Add("✅ Movement consequence: Safe passage (no bugs added)")
 			}
 		}
 		return newState
