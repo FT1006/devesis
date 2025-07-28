@@ -19,7 +19,7 @@ func (g *GameManager) showHand() error {
 	} else {
 		for i, cardID := range player.Hand {
 			if card, exists := core.CardDB[cardID]; exists {
-				fmt.Printf("  %d. %s - %s\n", i+1, card.Name, card.Description)
+				fmt.Printf("  %d. %s (%s) - %s\n", i+1, card.Name, cardID, card.Description)
 			} else {
 				fmt.Printf("  %d. %s (unknown card)\n", i+1, cardID)
 			}
