@@ -510,6 +510,15 @@ cards:
           scope: "AllPlayers"
           n: 2
 
+    # Engine Card - Required for escape win condition
+    - id: "SPECIAL_ENGINE"
+      name: "Engine Core"
+      desc: "Engine component required for escape"
+      category: "special"
+      source: "special"
+      rarity: "unique"
+      fx: []
+
   event:
     # Corruption Events (4 cards)
     - id: "EVENT_001"

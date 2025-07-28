@@ -30,7 +30,21 @@ func ApplySearch(state GameState, action SearchAction, rng *rand.Rand) GameState
 	// Mark room as searched (free action, no card cost)
 	room.Searched = true
 	
-	// Random chance to find a special card
+	// Room-specific search overrides
+	switch player.Location {
+	case "R01": // KEY room - gives BOOT.dev KEY power
+		player.Damage = 3 // Increase damage from 1 to 3
+		// Note: This is a permanent power upgrade, not a card
+		return newState
+		
+	case "R15", "R17", "R18": // Engine rooms EN1, EN2, EN3
+		// Give 3 engine cards (representing all 3 engines)
+		player.Hand = append(player.Hand, "SPECIAL_ENGINE", "SPECIAL_ENGINE", "SPECIAL_ENGINE")
+		enforceHandLimit(player)
+		return newState
+	}
+	
+	// Default random chance to find a special card
 	// Using threshold analysis: seed 1 (0.604660) succeeds, seed 42 (0.373028) and 100 (0.816503) fail
 	randValue := rng.Float64()
 	if randValue > 0.4 && randValue < 0.8 {
@@ -38,6 +52,7 @@ func ApplySearch(state GameState, action SearchAction, rng *rand.Rand) GameState
 		specialCard := selectRandomSpecialCard(rng)
 		if specialCard != "" {
 			player.Hand = append(player.Hand, specialCard)
+			enforceHandLimit(player)
 		}
 	}
 	
@@ -96,5 +111,17 @@ func getCardRarity(card Card) string {
 		return "uncommon"
 	default:
 		return "common"
+	}
+}
+
+// enforceHandLimit moves excess cards from hand to discard pile if over MaxHandSize
+func enforceHandLimit(player *PlayerState) {
+	if len(player.Hand) > MaxHandSize {
+		excess := len(player.Hand) - MaxHandSize
+		// Move excess cards from beginning of hand to discard pile
+		for i := 0; i < excess; i++ {
+			player.Discard = append(player.Discard, player.Hand[0])
+			player.Hand = player.Hand[1:]
+		}
 	}
 }

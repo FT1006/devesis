@@ -59,6 +59,23 @@ func Apply(state GameState, action Action) GameState {
 		// Remove card from hand
 		player.Hand = append(player.Hand[:cardIndex], player.Hand[cardIndex+1:]...)
 
+		// Check for engine card usage at escape room
+		if a.CardID == "SPECIAL_ENGINE" {
+			if player.Location == "R19" || player.Location == "R20" {
+				// Check if no Pythogoras in escape room
+				pythogorasInEscapeRoom := false
+				for _, enemy := range newState.Enemies {
+					if enemy.Type == Pythogoras && (enemy.Location == "R19" || enemy.Location == "R20") {
+						pythogorasInEscapeRoom = true
+						break
+					}
+				}
+				if !pythogorasInEscapeRoom {
+					player.EngineUsed = true // Mark as victory condition met
+				}
+			}
+		}
+
 		// Apply card effects using the effects engine
 		if card, exists := CardDB[a.CardID]; exists {
 			newState = ApplyCardEffects(newState, card, a.PlayerID)
@@ -112,12 +129,14 @@ func deepCopyGameState(state GameState) GameState {
 			MaxHP:        player.MaxHP,
 			Ammo:         player.Ammo,
 			MaxAmmo:      player.MaxAmmo,
+			Damage:       player.Damage,
 			Hand:         make([]CardID, len(player.Hand)),
 			Deck:         make([]CardID, len(player.Deck)),
 			Discard:      make([]CardID, len(player.Discard)),
 			Location:     player.Location,
 			HasActed:     player.HasActed,
 			SpecialUsed:  player.SpecialUsed,
+			EngineUsed:   player.EngineUsed,
 			PersonalObj:  player.PersonalObj,
 			CorporateObj: player.CorporateObj,
 		}
@@ -204,12 +223,14 @@ func initializeGameState(seed int64, playerClass DevClass) GameState {
 		MaxHP:        classStats.HP,
 		Ammo:         classStats.MaxAmmo,
 		MaxAmmo:      classStats.MaxAmmo,
+		Damage:       ShootDamage, // Base damage
 		Hand:         []CardID{},
 		Deck:         createRandomStartingDeck(seed),
 		Discard:      []CardID{},
 		Location:     "R12", // Start room
 		HasActed:     false,
 		SpecialUsed:  false,
+		EngineUsed:   false,
 		PersonalObj:  ObjectiveID(""),
 		CorporateObj: ObjectiveID(""),
 	}

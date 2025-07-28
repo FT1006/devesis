@@ -38,12 +38,14 @@ type PlayerState struct {
 	MaxHP        uint8
 	Ammo         uint8
 	MaxAmmo      uint8
+	Damage       uint8
 	Hand         []CardID
 	Deck         []CardID
 	Discard      []CardID
 	Location     RoomID
 	HasActed     bool
 	SpecialUsed  bool
+	EngineUsed   bool
 	PersonalObj  ObjectiveID
 	CorporateObj ObjectiveID
 }

@@ -100,20 +100,8 @@ func CheckEndSolo(state *GameState) (ended bool, win bool) {
 		return true, false // Time up = loss
 	}
 	
-	// Check if player is at escape pod
-	atEscapePod := player.Location == "R19" || player.Location == "R20"
-	
-	// Check if Pythogoras is defeated
-	pythogorasDefeated := true
-	for _, enemy := range state.Enemies {
-		if enemy.Type == Pythogoras {
-			pythogorasDefeated = false
-			break
-		}
-	}
-	
-	// Win condition: at escape pod AND Pythogoras defeated
-	if atEscapePod && pythogorasDefeated {
+	// Win condition: player successfully used engine card at escape room
+	if player.EngineUsed {
 		return true, true
 	}
 	
