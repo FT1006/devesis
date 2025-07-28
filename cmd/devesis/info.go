@@ -74,7 +74,7 @@ func (g *GameManager) renderMapWithLegend() string {
 	result.WriteString("• Types: KEY=Key STR=Start EN#=Engine ESC=Escape\n")
 	result.WriteString("         AMO=Ammo MED=Medical CLN=Clean AIR=Air SPN=Spawn\n")
 	result.WriteString("• Units: P#=Player IL=Infinite Loop SO=Stack Overflow PY=Pythogoras\n")
-	result.WriteString("• Status: XXX=Corrupted room (3+ bugs), * = OutOfRam\n")
+	result.WriteString("• Status: XXX=Unexplored room, * = OutOfRam\n")
 	
 	return result.String()
 }
@@ -108,7 +108,7 @@ func (g *GameManager) renderMap() string {
 	
 	// Add mini-guide with examples
 	result.WriteString("\n")
-	result.WriteString("Examples: [R12,+,0] = Room R12, not searched, 0 bugs | [R07,-,2] = Room R07, searched, 2 bugs\n")
+	result.WriteString("Examples: [R12,+,0] = Room R12, not searched, 0 bugs | [R07,-,2*] = Room R07, searched, 2 bugs, OutOfRam\n")
 	result.WriteString("Content:  P1 = you, P2-P4 = other players | IL = Infinite Loop, SO = Stack Overflow, PY = Pythogoras\n")
 	result.WriteString("\n")
 	result.WriteString("[PREDEFINED] KEY:R01 STR:R12 EN1:R15 EN2:R18 EN3:R17 ESC:R19,R20\n")
