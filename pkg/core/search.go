@@ -6,7 +6,7 @@ import (
 )
 
 // ApplySearch implements the search action mechanics
-func ApplySearch(state GameState, action SearchAction, rng *rand.Rand) GameState {
+func ApplySearch(state GameState, action SearchAction, rng *rand.Rand, log *EffectLog) GameState {
 	// Deep copy state to avoid mutations
 	newState := deepCopyGameState(state)
 	
@@ -29,17 +29,21 @@ func ApplySearch(state GameState, action SearchAction, rng *rand.Rand) GameState
 	
 	// Mark room as searched (free action, no card cost)
 	room.Searched = true
+	log.Add("🔍 %s searches %s", action.PlayerID, player.Location)
 	
 	// Room-specific search overrides
 	switch player.Location {
 	case "R01": // KEY room - gives BOOT.dev KEY power
+		oldDamage := player.Damage
 		player.Damage = 3 // Increase damage from 1 to 3
+		log.Add("🔑 Found the BOOT.dev KEY! Damage: %d → %d", oldDamage, player.Damage)
 		// Note: This is a permanent power upgrade, not a card
 		return newState
 		
 	case "R15", "R17", "R18": // Engine rooms EN1, EN2, EN3
 		// Give 3 engine cards (representing all 3 engines)
 		player.Hand = append(player.Hand, "SPECIAL_ENGINE", "SPECIAL_ENGINE", "SPECIAL_ENGINE")
+		log.Add("⚙️ Found 3 engine cards!")
 		enforceHandLimitWithDiscard(&player.Hand, &player.Discard)
 		return newState
 	}
@@ -52,8 +56,17 @@ func ApplySearch(state GameState, action SearchAction, rng *rand.Rand) GameState
 		specialCard := selectRandomSpecialCard(rng)
 		if specialCard != "" {
 			player.Hand = append(player.Hand, specialCard)
+			if card, exists := CardDB[specialCard]; exists {
+				log.Add("🎴 Found %s - %s", card.Name, card.Description)
+			} else {
+				log.Add("🎴 Found special card: %s", specialCard)
+			}
 			enforceHandLimitWithDiscard(&player.Hand, &player.Discard)
+		} else {
+			log.Add("🔍 Nothing found")
 		}
+	} else {
+		log.Add("🔍 Nothing found")
 	}
 	
 	return newState

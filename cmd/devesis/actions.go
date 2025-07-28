@@ -239,46 +239,12 @@ func (g *GameManager) executeSearch() error {
 		return nil
 	}
 	
-	// Count cards before search
-	cardsBefore := len(player.Hand)
-	
+	// Execute search action with logging
 	action := core.SearchAction{
 		PlayerID: player.ID,
 	}
 	
-	newState := core.ApplyWithoutLog(*g.state, action)
-	
-	// Check if search succeeded by comparing room searched status
-	room := newState.Rooms[player.Location]
-	if room != nil && room.Searched {
-		// Search succeeded
-		newPlayer := newState.Players[player.ID]
-		cardsAfter := len(newPlayer.Hand)
-		
-		g.state = &newState
-		fmt.Println("🔍 You search the room thoroughly...")
-		
-		// Check for special room outcomes first
-		if player.Location == "R01" && newPlayer.Damage > player.Damage {
-			// BOOT.dev KEY found and auto-consumed
-			fmt.Printf("🔑 Found the **BOOT.dev KEY**!\n")
-			fmt.Printf("⚡ Auto-consumed! Your damage increased from %d to %d!\n", player.Damage, newPlayer.Damage)
-		} else if cardsAfter > cardsBefore {
-			// Found a card!
-			newCardID := newPlayer.Hand[cardsAfter-1] // Last card added
-			if card, exists := core.CardDB[newCardID]; exists {
-				fmt.Printf("💎 Found special card: **%s** - %s\n", card.Name, card.Description)
-				fmt.Printf("💾 **%s** added to your hand.\n", card.Name)
-			} else {
-				fmt.Println("💎 Found a special card!")
-			}
-		} else {
-			// No card found and no special effect
-			fmt.Println("❌ Nothing useful found in this room.")
-		}
-	} else {
-		fmt.Println("✗ Cannot search this room.")
-	}
+	g.ResolveWithLogging(action)
 	
 	return nil
 }

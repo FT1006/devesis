@@ -113,7 +113,7 @@ func Apply(state GameState, action Action, log *EffectLog) GameState {
 	case SearchAction:
 		// Use the proper search logic with RNG
 		rng := rand.New(rand.NewSource(state.RandSeed + int64(state.Round)*1000))
-		return ApplySearch(state, a, rng)
+		return ApplySearch(state, a, rng, log)
 
 	case PlayCardAction:
 		// Deep copy the state to avoid mutations
