@@ -40,7 +40,7 @@ func (g *GameManager) Initialize() error {
 		PlayerClass: playerClass,
 	}
 	
-	newState := core.Apply(emptyState, initialAction)
+	newState := core.ApplyWithoutLog(emptyState, initialAction)
 	g.state = &newState
 	
 	fmt.Printf("You are a %s developer. Good luck!\n", g.getClassDisplayName(playerClass))
@@ -289,7 +289,7 @@ func (g *GameManager) DisplayGameOver() {
 	}
 }
 
-func (g *GameManager) ExecuteCommand(command string, args []string) error {
+func (g *GameManager) ExecuteCommand(command string, args []string, reader *bufio.Reader) error {
 	switch command {
 	// Turn-economy actions
 	case "move", "mv":
@@ -373,7 +373,7 @@ func (g *GameManager) ExecutePlayerPhase(reader *bufio.Reader) error {
 		commandArgs := args[1:]
 		
 		// Execute command
-		if err := g.ExecuteCommand(command, commandArgs); err != nil {
+		if err := g.ExecuteCommand(command, commandArgs, reader); err != nil {
 			if err.Error() == "quit" {
 				return err
 			}

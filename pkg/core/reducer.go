@@ -4,7 +4,7 @@ import (
 	"math/rand"
 )
 
-func Apply(state GameState, action Action) GameState {
+func Apply(state GameState, action Action, log *EffectLog) GameState {
 	switch a := action.(type) {
 	case InitializeGameAction:
 		// Create initial game state - no deep copy needed
@@ -22,10 +22,12 @@ func Apply(state GameState, action Action) GameState {
 		if CanMove(&newState, player.Location, a.To) {
 			oldLocation := player.Location
 			player.Location = a.To
+			log.Add("🚶 %s moves from %s → %s", a.PlayerID, oldLocation, a.To)
 			
 			// Mark target room as explored when entering
 			if room := newState.Rooms[a.To]; room != nil && !room.Explored {
 				room.Explored = true
+				log.Add("🏷️  %s marked as explored", a.To)
 			}
 			
 			// Movement consequence: RNG bug placement (3 equal outcomes)
@@ -36,10 +38,12 @@ func Apply(state GameState, action Action) GameState {
 			case 0:
 				// 1 bug in current room (where player moved FROM)
 				if oldRoom := newState.Rooms[oldLocation]; oldRoom != nil {
+					oldBugs := oldRoom.BugMarkers
 					oldRoom.BugMarkers += 1
 					if oldRoom.BugMarkers > MaxBugMarkers {
 						oldRoom.BugMarkers = MaxBugMarkers
 					}
+					log.Add("🪲 %s bugs: %d → %d", oldLocation, oldBugs, oldRoom.BugMarkers)
 				}
 			case 1:
 				// 1 bug in max 2 surrounding rooms of old location
@@ -57,15 +61,18 @@ func Apply(state GameState, action Action) GameState {
 					
 					for i := 0; i < maxRooms; i++ {
 						if room := newState.Rooms[shuffledRooms[i]]; room != nil {
+							oldBugs := room.BugMarkers
 							room.BugMarkers += 1
 							if room.BugMarkers > MaxBugMarkers {
 								room.BugMarkers = MaxBugMarkers
 							}
+							log.Add("🪲 %s bugs: %d → %d", shuffledRooms[i], oldBugs, room.BugMarkers)
 						}
 					}
 				}
 			case 2:
 				// Safe - no bugs added
+				log.Add("✅ Safe movement (no bugs)")
 			}
 		}
 		return newState
@@ -158,8 +165,19 @@ func Apply(state GameState, action Action) GameState {
 		return newState
 }
 	
-	// Default case - return original state unchanged
+		// Default case - return original state unchanged
 	return state
+}
+
+// ApplyWithoutLog is a convenience wrapper for backwards compatibility
+func ApplyWithoutLog(state GameState, action Action) GameState {
+	log := NewEffectLog()
+	return Apply(state, action, log)
+}
+
+// DeepCopyGameState creates a deep copy of the game state (exported)
+func DeepCopyGameState(state GameState) GameState {
+	return deepCopyGameState(state)
 }
 
 // Deep copy helper function
@@ -179,6 +197,7 @@ func deepCopyGameState(state GameState) GameState {
 		Enemies:       make(map[EnemyID]*Enemy),
 		QuestionOrder: make([]int, len(state.QuestionOrder)),
 		NextQuestion:  state.NextQuestion,
+		ScratchLog:    NewEffectLog(), // Initialize effect log
 	}
 	
 	// Copy rooms
@@ -261,6 +280,7 @@ func initializeGameState(seed int64, playerClass DevClass) GameState {
 		// Initialize pre-shuffled question order
 		QuestionOrder: initializeQuestionOrder(seed),
 		NextQuestion:  0,
+		ScratchLog:    NewEffectLog(), // Initialize effect log
 	}
 
 	// Initialize all 20 rooms from the spaceship layout

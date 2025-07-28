@@ -19,6 +19,9 @@ type GameState struct {
 	// Question system using pre-shuffle approach
 	QuestionOrder []int // Pre-shuffled order of question IDs 0-49
 	NextQuestion  int   // Index of next question to use
+	
+	// Effect logging for step-by-step display (not serialized)
+	ScratchLog *EffectLog `json:"-"`
 }
 
 type RoomState struct {
