@@ -70,11 +70,11 @@ func (g *GameManager) renderMapWithLegend() string {
 	
 	// Add legend
 	result.WriteString("🗺️  MAP LEGEND:\n")
-	result.WriteString("• Rooms: [ID,±,B] = [Room ID, Searched(+/-), Bug count]\n")
+	result.WriteString("• Rooms: [ID,±,B*] = [Room ID, Searched(+/-), Bug count, OutOfRam(*)]\n")
 	result.WriteString("• Types: KEY=Key STR=Start EN#=Engine ESC=Escape\n")
 	result.WriteString("         AMO=Ammo MED=Medical CLN=Clean AIR=Air SPN=Spawn\n")
 	result.WriteString("• Units: P#=Player IL=Infinite Loop SO=Stack Overflow PY=Pythogoras\n")
-	result.WriteString("• Status: XXX=Corrupted room (3+ bugs)\n")
+	result.WriteString("• Status: XXX=Corrupted room (3+ bugs), * = OutOfRam\n")
 	
 	return result.String()
 }
@@ -148,12 +148,16 @@ func (g *GameManager) renderGridRow(row int, overflowRooms map[core.RoomID][]str
 		} else {
 			room := g.state.Rooms[core.RoomID(roomID)]
 			
-			// Line 1: [RoomID,SearchStatus,BugCount]
+			// Line 1: [RoomID,SearchStatus,BugCount*] (* = OutOfRam)
 			searchStatus := "+"
 			if room.Searched {
 				searchStatus = "-"
 			}
-			roomInfo := fmt.Sprintf("%s,%s,%d", roomID, searchStatus, room.BugMarkers)
+			outOfRamIndicator := ""
+			if room.OutOfRam {
+				outOfRamIndicator = "*"
+			}
+			roomInfo := fmt.Sprintf("%s,%s,%d%s", roomID, searchStatus, room.BugMarkers, outOfRamIndicator)
 			line1.WriteString(g.formatGridCell(roomInfo))
 			
 			// Line 2: Room type
