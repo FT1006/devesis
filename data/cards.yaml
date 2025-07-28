@@ -1,0 +1,809 @@
+# Devesis: Tutorial Hell - Card Database
+# Complete card definitions using effect-spec.md vocabulary
+
+cards:
+  action:
+    # Movement Support Cards (8 cards)
+    - id: "ACTION_001"
+      name: "Skip Ahead"
+      desc: "Skip next movement question"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "SkipQuestion"
+          scope: "Self"
+          n: 1
+          
+    - id: "ACTION_002"
+      name: "Room Scanner"
+      desc: "Reveal all adjacent rooms"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "RevealRoom"
+          scope: "AdjacentRooms"
+          n: 1
+          
+    - id: "ACTION_003"
+      name: "Debug Vision"
+      desc: "Reveal all unexplored rooms"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "RevealRoom"
+          scope: "AllRooms"
+          n: 1
+          
+    - id: "ACTION_004"
+      name: "Safe Path"
+      desc: "Skip question and remove 1 bug from current room"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "SkipQuestion"
+          scope: "Self"
+          n: 1
+        - op: "ModifyBugs"
+          scope: "CurrentRoom"
+          n: -1
+
+    # Bug Management Cards (12 cards)
+    - id: "ACTION_005"
+      name: "Quick Fix"
+      desc: "Remove 1 bug from current room"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyBugs"
+          scope: "CurrentRoom"
+          n: -1
+          
+    - id: "ACTION_006"
+      name: "Quick Fix"
+      desc: "Remove 1 bug from current room"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyBugs"
+          scope: "CurrentRoom"
+          n: -1
+          
+    - id: "ACTION_007"
+      name: "Quick Fix"
+      desc: "Remove 1 bug from current room"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyBugs"
+          scope: "CurrentRoom"
+          n: -1
+          
+    - id: "ACTION_008"
+      name: "Quick Fix"
+      desc: "Remove 1 bug from current room"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyBugs"
+          scope: "CurrentRoom"
+          n: -1
+          
+    - id: "ACTION_009"
+      name: "Code Review"
+      desc: "Remove 2 bugs from current room"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyBugs"
+          scope: "CurrentRoom"
+          n: -2
+          
+    - id: "ACTION_010"
+      name: "Code Review"
+      desc: "Remove 2 bugs from current room"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyBugs"
+          scope: "CurrentRoom"
+          n: -2
+          
+    - id: "ACTION_011"
+      name: "Code Review"
+      desc: "Remove 2 bugs from current room"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyBugs"
+          scope: "CurrentRoom"
+          n: -2
+          
+    - id: "ACTION_012"
+      name: "Refactor"
+      desc: "Remove 1 bug from all adjacent rooms"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyBugs"
+          scope: "AdjacentRooms"
+          n: -1
+          
+    - id: "ACTION_013"
+      name: "Refactor"
+      desc: "Remove 1 bug from all adjacent rooms"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyBugs"
+          scope: "AdjacentRooms"
+          n: -1
+          
+    - id: "ACTION_014"
+      name: "System Restore"
+      desc: "Remove 2 bugs from all rooms"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyBugs"
+          scope: "AllRooms"
+          n: -2
+          
+    - id: "ACTION_015"
+      name: "System Restore"
+      desc: "Remove 2 bugs from all rooms"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyBugs"
+          scope: "AllRooms"
+          n: -2
+          
+    - id: "ACTION_016"
+      name: "Clean Slate"
+      desc: "Remove ALL bugs from current room"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "CleanRoom"
+          scope: "CurrentRoom"
+          n: 1
+
+    # Resource Management Cards (8 cards)
+    - id: "ACTION_017"
+      name: "Ammo Cache"
+      desc: "Gain 2 ammo"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyAmmo"
+          scope: "Self"
+          n: 2
+          
+    - id: "ACTION_018"
+      name: "Ammo Cache"
+      desc: "Gain 2 ammo"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyAmmo"
+          scope: "Self"
+          n: 2
+          
+    - id: "ACTION_019"
+      name: "Ammo Cache"
+      desc: "Gain 2 ammo"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyAmmo"
+          scope: "Self"
+          n: 2
+          
+    - id: "ACTION_020"
+      name: "First Aid"
+      desc: "Heal 2 HP"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyHP"
+          scope: "Self"
+          n: 2
+          
+    - id: "ACTION_021"
+      name: "First Aid"
+      desc: "Heal 2 HP"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyHP"
+          scope: "Self"
+          n: 2
+          
+    - id: "ACTION_022"
+      name: "Energy Drink"
+      desc: "Heal 1 HP and gain 1 ammo"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyHP"
+          scope: "Self"
+          n: 1
+        - op: "ModifyAmmo"
+          scope: "Self"
+          n: 1
+          
+    - id: "ACTION_023"
+      name: "Energy Drink"
+      desc: "Heal 1 HP and gain 1 ammo"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyHP"
+          scope: "Self"
+          n: 1
+        - op: "ModifyAmmo"
+          scope: "Self"
+          n: 1
+          
+    - id: "ACTION_024"
+      name: "Card Draw"
+      desc: "Draw 2 cards"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "DrawCards"
+          scope: "Self"
+          n: 2
+
+    # Tactical Options (7 cards)
+    - id: "ACTION_025"
+      name: "Team Rally"
+      desc: "All players gain 1 HP"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyHP"
+          scope: "AllPlayers"
+          n: 1
+          
+    - id: "ACTION_026"
+      name: "Supply Drop"
+      desc: "All players gain 1 ammo"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyAmmo"
+          scope: "AllPlayers"
+          n: 1
+          
+    - id: "ACTION_027"
+      name: "Knowledge Share"
+      desc: "All players draw 1 card"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "DrawCards"
+          scope: "AllPlayers"
+          n: 1
+          
+    - id: "ACTION_028"
+      name: "Spawn Distraction"
+      desc: "Spawn weak enemy in room with most bugs"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "SpawnEnemy"
+          scope: "RoomWithMostBugs"
+          n: 1
+          
+    - id: "ACTION_029"
+      name: "Controlled Spawn"
+      desc: "Spawn medium enemy in current room"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "SpawnEnemy"
+          scope: "CurrentRoom"
+          n: 2
+          
+    - id: "ACTION_030"
+      name: "Sabotage"
+      desc: "Add 1 bug to room with most bugs"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "ModifyBugs"
+          scope: "RoomWithMostBugs"
+          n: 1
+          
+    - id: "ACTION_031"
+      name: "Emergency Corrupt"
+      desc: "Force current room to become corrupted"
+      category: "action"
+      source: "action"
+      fx:
+        - op: "SetCorrupted"
+          scope: "CurrentRoom"
+          n: 1
+
+  special:
+    # Rare Bug Fixes (5 cards)
+    - id: "SPECIAL_001"
+      name: "Antivirus"
+      desc: "Remove ALL bugs from ALL rooms"
+      category: "special"
+      source: "special"
+      rarity: "rare"
+      fx:
+        - op: "ModifyBugs"
+          scope: "AllRooms"
+          n: -999
+          
+    - id: "SPECIAL_002"
+      name: "Memory Defrag"
+      desc: "Remove corruption from all rooms"
+      category: "special"
+      source: "special"
+      rarity: "uncommon"
+      fx:
+        - op: "SetCorrupted"
+          scope: "AllRooms"
+          n: 0
+          
+    - id: "SPECIAL_003"
+      name: "Registry Clean"
+      desc: "Remove ALL bugs and prevent corruption"
+      category: "special"
+      source: "special"
+      rarity: "rare"
+      fx:
+        - op: "ModifyBugs"
+          scope: "AllRooms"
+          n: -999
+        - op: "SetCorrupted"
+          scope: "AllRooms"
+          n: 0
+          
+    - id: "SPECIAL_004"
+      name: "Factory Reset"
+      desc: "Reset current room to pristine state"
+      category: "special"
+      source: "special"
+      rarity: "uncommon"
+      fx:
+        - op: "CleanRoom"
+          scope: "CurrentRoom"
+          n: 1
+        - op: "SetCorrupted"
+          scope: "CurrentRoom"
+          n: 0
+          
+    - id: "SPECIAL_005"
+      name: "Kernel Patch"
+      desc: "Remove 3 bugs from room with most bugs"
+      category: "special"
+      source: "special"
+      rarity: "common"
+      fx:
+        - op: "ModifyBugs"
+          scope: "RoomWithMostBugs"
+          n: -3
+
+    # Combat Specials (5 cards)
+    - id: "SPECIAL_006"
+      name: "Logic Bomb"
+      desc: "Spawn powerful enemy in current room"
+      category: "special"
+      source: "special"
+      rarity: "uncommon"
+      fx:
+        - op: "SpawnEnemy"
+          scope: "CurrentRoom"
+          n: 3
+          
+    - id: "SPECIAL_007"
+      name: "Process Spawn"
+      desc: "Spawn weak enemy in current room"
+      category: "special"
+      source: "special"
+      rarity: "common"
+      fx:
+        - op: "SpawnEnemy"
+          scope: "CurrentRoom"
+          n: 1
+          
+    - id: "SPECIAL_008"
+      name: "Stack Overflow"
+      desc: "Spawn medium enemy in room with most bugs"
+      category: "special"
+      source: "special"
+      rarity: "common"
+      fx:
+        - op: "SpawnEnemy"
+          scope: "RoomWithMostBugs"
+          n: 2
+          
+    - id: "SPECIAL_009"
+      name: "Mass Spawn"
+      desc: "Spawn weak enemies in all corrupted rooms"
+      category: "special"
+      source: "special"
+      rarity: "rare"
+      fx:
+        - op: "SpawnEnemy"
+          scope: "AllRooms"
+          n: 1
+          
+    - id: "SPECIAL_010"
+      name: "Corruption Spread"
+      desc: "Add bugs to all rooms, force corruption"
+      category: "special"
+      source: "special"
+      rarity: "uncommon"
+      fx:
+        - op: "ModifyBugs"
+          scope: "AllRooms"
+          n: 2
+        - op: "SetCorrupted"
+          scope: "AllRooms"
+          n: 1
+
+    # Utility Specials (5 cards)
+    - id: "SPECIAL_011"
+      name: "Backup Restore"
+      desc: "All players heal to full HP"
+      category: "special"
+      source: "special"
+      rarity: "rare"
+      fx:
+        - op: "ModifyHP"
+          scope: "AllPlayers"
+          n: 10
+          
+    - id: "SPECIAL_012"
+      name: "Cloud Storage"
+      desc: "All players refill ammo to max"
+      category: "special"
+      source: "special"
+      rarity: "rare"
+      fx:
+        - op: "ModifyAmmo"
+          scope: "AllPlayers"
+          n: 10
+          
+    - id: "SPECIAL_013"
+      name: "Stack Overflow"
+      desc: "Draw 3 cards, discard 1"
+      category: "special"
+      source: "special"
+      rarity: "uncommon"
+      fx:
+        - op: "DrawCards"
+          scope: "Self"
+          n: 3
+        - op: "DiscardCards"
+          scope: "Self"
+          n: 1
+          
+    - id: "SPECIAL_014"
+      name: "Resource Sync"
+      desc: "All players gain 2 HP and 2 ammo"
+      category: "special"
+      source: "special"
+      rarity: "uncommon"
+      fx:
+        - op: "ModifyHP"
+          scope: "AllPlayers"
+          n: 2
+        - op: "ModifyAmmo"
+          scope: "AllPlayers"
+          n: 2
+          
+    - id: "SPECIAL_015"
+      name: "Card Overflow"
+      desc: "All players draw 2 cards"
+      category: "special"
+      source: "special"
+      rarity: "common"
+      fx:
+        - op: "DrawCards"
+          scope: "AllPlayers"
+          n: 2
+
+  event:
+    # Corruption Events (4 cards)
+    - id: "EVENT_001"
+      name: "Memory Leak"
+      desc: "Enemies shift as corruption spreads"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 1
+        - op: "ModifyBugs"
+          scope: "RoomWithMostBugs"
+          n: 2
+          
+    - id: "EVENT_002"
+      name: "Buffer Overflow"
+      desc: "Enemies patrol as bugs accumulate"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 1
+        - op: "ModifyBugs"
+          scope: "AllRooms"
+          n: 1
+          
+    - id: "EVENT_003"
+      name: "Null Pointer"
+      desc: "Enemies advance as corruption takes hold"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 2
+        - op: "SetCorrupted"
+          scope: "RoomWithMostBugs"
+          n: 1
+          
+    - id: "EVENT_004"
+      name: "Race Condition"
+      desc: "Enemies move, then spawn in high-traffic area"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 1
+        - op: "SpawnEnemy"
+          scope: "RoomWithMostBugs"
+          n: 1
+
+    # System Events (3 cards)
+    - id: "EVENT_005"
+      name: "Garbage Collection"
+      desc: "Enemies reposition during maintenance"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 1
+        - op: "ModifyBugs"
+          scope: "AllRooms"
+          n: -1
+          
+    - id: "EVENT_006"
+      name: "Auto-Update"
+      desc: "Enemies shift during system scan"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 1
+        - op: "RevealRoom"
+          scope: "AllRooms"
+          n: 1
+          
+    - id: "EVENT_007"
+      name: "Cache Clear"
+      desc: "Enemies surge as memory clears"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 3
+        - op: "DiscardCards"
+          scope: "AllPlayers"
+          n: 1
+
+    # Enemy Events (3 cards)
+    - id: "EVENT_008"
+      name: "Process Spawn"
+      desc: "Enemies shift, then new malware starts"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 1
+        - op: "SpawnEnemy"
+          scope: "RoomWithMostBugs"
+          n: 1
+          
+    - id: "EVENT_009"
+      name: "System Corruption"
+      desc: "Enemies advance as rooms destabilize"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 2
+        - op: "ModifyBugs"
+          scope: "AllRooms"
+          n: 1
+        - op: "SpawnEnemy"
+          scope: "RoomWithMostBugs"
+          n: 2
+          
+    - id: "EVENT_010"
+      name: "Error Propagation"
+      desc: "Enemies advance amid cascading failures"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 2
+        - op: "ModifyBugs"
+          scope: "AllRooms"
+          n: 2
+          
+    # Movement Events (10 cards with 3 effects each)
+    - id: "EVENT_011"
+      name: "Malware Patrol"
+      desc: "Enemies advance while spreading minor corruption"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 1
+        - op: "ModifyBugs"
+          scope: "CurrentRoom"
+          n: 1
+        - op: "RevealRoom"
+          scope: "AdjacentRooms"
+          n: 1
+          
+    - id: "EVENT_012"
+      name: "System Scan"
+      desc: "Security sweep reveals rooms as enemies shift"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 1
+        - op: "RevealRoom"
+          scope: "AllRooms"
+          n: 1
+        - op: "ModifyBugs"
+          scope: "RoomWithMostBugs"
+          n: 2
+          
+    - id: "EVENT_013"
+      name: "Memory Leak Migration"
+      desc: "Enemies relocate, causing minor system damage"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 1
+        - op: "ModifyBugs"
+          scope: "AdjacentRooms"
+          n: 1
+        - op: "SpawnEnemy"
+          scope: "CurrentRoom"
+          n: 1
+          
+    - id: "EVENT_014"
+      name: "Process Reallocation"
+      desc: "System reshuffles processes and cleans some areas"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 1
+        - op: "CleanRoom"
+          scope: "CurrentRoom"
+          n: 1
+        - op: "ModifyBugs"
+          scope: "AllRooms"
+          n: 1
+          
+    - id: "EVENT_015"
+      name: "Network Probe"
+      desc: "Enemies scout while system performs maintenance"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 1
+        - op: "ModifyBugs"
+          scope: "CurrentRoom"
+          n: -1
+        - op: "SetCorrupted"
+          scope: "RoomWithMostBugs"
+          n: 1
+          
+    - id: "EVENT_016"
+      name: "Thread Migration"
+      desc: "Rapid thread movement with minor spillover"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 2
+        - op: "ModifyBugs"
+          scope: "CurrentRoom"
+          n: 1
+        - op: "SpawnEnemy"
+          scope: "RoomWithMostBugs"
+          n: 1
+          
+    - id: "EVENT_017"
+      name: "Cache Overflow"
+      desc: "Fast enemy movement triggers cache issues"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 2
+        - op: "RevealRoom"
+          scope: "CurrentRoom"
+          n: 1
+        - op: "ModifyBugs"
+          scope: "AllRooms"
+          n: 2
+          
+    - id: "EVENT_018"
+      name: "Emergency Protocol"
+      desc: "Rapid response with collateral damage"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 2
+        - op: "ModifyBugs"
+          scope: "AdjacentRooms"
+          n: 1
+        - op: "SetCorrupted"
+          scope: "CurrentRoom"
+          n: 1
+          
+    - id: "EVENT_019"
+      name: "Distributed Attack"
+      desc: "Coordinated movement with cleanup attempts"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 2
+        - op: "CleanRoom"
+          scope: "AdjacentRooms"
+          n: 1
+        - op: "SpawnEnemy"
+          scope: "RoomWithMostBugs"
+          n: 2
+          
+    - id: "EVENT_020"
+      name: "Critical Breach"
+      desc: "Maximum enemy movement causes chaos"
+      category: "event"
+      source: "event"
+      fx:
+        - op: "MoveEnemies"
+          scope: "AllRooms"
+          n: 3
+        - op: "ModifyBugs"
+          scope: "CurrentRoom"
+          n: 1
+        - op: "SetCorrupted"
+          scope: "AllRooms"
+          n: 1

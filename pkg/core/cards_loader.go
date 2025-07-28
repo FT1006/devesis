@@ -95,8 +95,8 @@ func convertYAMLToCard(yamlCard YAMLCard) (Card, error) {
 		source = SrcAction
 	case "event":
 		source = SrcEvent
-	case "enemy_ai":
-		source = SrcEnemyAI
+	case "special":
+		source = SrcSpecial
 	default:
 		return Card{}, fmt.Errorf("unknown source: %s", yamlCard.Source)
 	}

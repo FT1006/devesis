@@ -2,12 +2,27 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spaceship/devesis/pkg/core"
 )
 
+// consumeAction decrements the action counter and returns true if action is allowed
+func (g *GameManager) consumeAction() bool {
+	if g.state.ActionsLeft <= 0 {
+		fmt.Println("✗ No actions remaining this turn!")
+		return false
+	}
+	g.state.ActionsLeft--
+	return true
+}
+
 func (g *GameManager) executeMove(args []string) error {
+	if !g.consumeAction() {
+		return nil
+	}
+	
 	if len(args) == 0 {
 		return fmt.Errorf("usage: move <roomID>")
 	}
@@ -176,6 +191,10 @@ func (g *GameManager) getEnemyName(enemyType core.EnemyType) string {
 }
 
 func (g *GameManager) executeSearch() error {
+	if !g.consumeAction() {
+		return nil
+	}
+	
 	player := core.GetActivePlayer(g.state)
 	if player == nil {
 		return fmt.Errorf("no active player")
@@ -228,6 +247,10 @@ func (g *GameManager) executeSearch() error {
 }
 
 func (g *GameManager) executeShoot() error {
+	if !g.consumeAction() {
+		return nil
+	}
+	
 	player := core.GetActivePlayer(g.state)
 	if player == nil {
 		return fmt.Errorf("no active player")
@@ -235,7 +258,7 @@ func (g *GameManager) executeShoot() error {
 	
 	// Check ammo before attempting
 	if player.Ammo < core.ShootAmmoCost {
-		fmt.Printf("✗ Not enough ammo! Need %d ammo, have %d.\\n", core.ShootAmmoCost, player.Ammo)
+		fmt.Printf("✗ Not enough ammo! Need %d ammo, have %d.\n", core.ShootAmmoCost, player.Ammo)
 		return nil
 	}
 	
@@ -266,16 +289,16 @@ func (g *GameManager) executeShoot() error {
 	newState := core.ApplyCombat(*g.state, action)
 	
 	// Show combat results
-	fmt.Printf("🔫 Shooting adjacent rooms! (-%d ammo)\\n", core.ShootAmmoCost)
+	fmt.Printf("🔫 Shooting adjacent rooms! (-%d ammo)\n", core.ShootAmmoCost)
 	for roomID, enemyIDs := range targets {
 		for _, enemyID := range enemyIDs {
 			oldEnemy := g.state.Enemies[enemyID]
 			newEnemy, exists := newState.Enemies[enemyID]
 			
 			if !exists {
-				fmt.Printf("   💀 %s in %s destroyed!\\n", g.getEnemyName(oldEnemy.Type), roomID)
+				fmt.Printf("   💀 %s in %s destroyed!\n", g.getEnemyName(oldEnemy.Type), roomID)
 			} else if newEnemy.HP < oldEnemy.HP {
-				fmt.Printf("   🎯 %s in %s: %d → %d HP\\n", 
+				fmt.Printf("   🎯 %s in %s: %d → %d HP\n", 
 					g.getEnemyName(oldEnemy.Type), roomID, oldEnemy.HP, newEnemy.HP)
 			}
 		}
@@ -286,6 +309,10 @@ func (g *GameManager) executeShoot() error {
 }
 
 func (g *GameManager) executeMelee() error {
+	if !g.consumeAction() {
+		return nil
+	}
+	
 	player := core.GetActivePlayer(g.state)
 	if player == nil {
 		return fmt.Errorf("no active player")
@@ -317,9 +344,9 @@ func (g *GameManager) executeMelee() error {
 		newEnemy, exists := newState.Enemies[enemyID]
 		
 		if !exists {
-			fmt.Printf("   💀 %s destroyed!\\n", g.getEnemyName(oldEnemy.Type))
+			fmt.Printf("   💀 %s destroyed!\n", g.getEnemyName(oldEnemy.Type))
 		} else if newEnemy.HP < oldEnemy.HP {
-			fmt.Printf("   🎯 %s: %d → %d HP\\n", 
+			fmt.Printf("   🎯 %s: %d → %d HP\n", 
 				g.getEnemyName(oldEnemy.Type), oldEnemy.HP, newEnemy.HP)
 		}
 	}
@@ -329,8 +356,12 @@ func (g *GameManager) executeMelee() error {
 }
 
 func (g *GameManager) executePlayCard(args []string) error {
+	if !g.consumeAction() {
+		return nil
+	}
+	
 	if len(args) == 0 {
-		return fmt.Errorf("usage: play <cardID>")
+		return fmt.Errorf("usage: play <cardNumber> or play <cardID>")
 	}
 	
 	player := core.GetActivePlayer(g.state)
@@ -343,7 +374,20 @@ func (g *GameManager) executePlayCard(args []string) error {
 		return nil
 	}
 	
-	cardID := core.CardID(args[0])
+	var cardID core.CardID
+	
+	// Try to parse as card number first (1-based index)
+	if cardNum, err := strconv.Atoi(args[0]); err == nil {
+		if cardNum < 1 || cardNum > len(player.Hand) {
+			fmt.Printf("✗ Card number must be between 1 and %d!\n", len(player.Hand))
+			return nil
+		}
+		// Convert to 0-based index and get the card ID
+		cardID = player.Hand[cardNum-1]
+	} else {
+		// Treat as direct card ID
+		cardID = core.CardID(args[0])
+	}
 	
 	// Check if card is in hand
 	found := false
@@ -380,8 +424,135 @@ func (g *GameManager) executePlayCard(args []string) error {
 }
 
 func (g *GameManager) executeRoomAction() error {
-	// TODO: Implement room actions
-	return fmt.Errorf("room actions not yet implemented")
+	if !g.consumeAction() {
+		return nil
+	}
+	
+	player := core.GetActivePlayer(g.state)
+	if player == nil {
+		return fmt.Errorf("no active player")
+	}
+	
+	// Get current room
+	currentRoom := g.state.Rooms[player.Location]
+	if currentRoom == nil {
+		return fmt.Errorf("invalid player location")
+	}
+	
+	// Check if room is corrupted
+	if currentRoom.Corrupted {
+		fmt.Println("✗ Cannot use room actions in corrupted rooms!")
+		return nil
+	}
+	
+	// Check if player already used room action this turn
+	if player.SpecialUsed {  // Using existing field temporarily
+		fmt.Println("✗ You've already used your room action this turn!")
+		return nil
+	}
+	
+	// Apply room-specific effect
+	switch currentRoom.Type {
+	case core.MedBay:
+		return g.executeRoomActionMedBay(player, currentRoom)
+	case core.AmmoCache:
+		return g.executeRoomActionAmmoCache(player, currentRoom)
+	case core.CleanRoomType:
+		return g.executeRoomActionCleanRoom(player, currentRoom)
+	default:
+		fmt.Println("✗ No special room action available here.")
+		return nil
+	}
+}
+
+func (g *GameManager) executeRoomActionMedBay(player *core.PlayerState, room *core.RoomState) error {
+	// Check if healing would be beneficial
+	if player.HP >= player.MaxHP {
+		fmt.Println("💡 You're already at full health - MedBay does nothing.")
+		return nil
+	}
+	
+	// Apply healing
+	oldHP := player.HP
+	newHP := player.HP + core.MedBayHealAmount
+	if newHP > player.MaxHP {
+		newHP = player.MaxHP
+	}
+	player.HP = newHP
+	
+	// Mark as used
+	player.SpecialUsed = true
+	
+	fmt.Printf("🏥 MedBay healing! HP: %d → %d (+%d)\n", 
+		oldHP, newHP, newHP-oldHP)
+	fmt.Println("✓ Room action complete (1 action used)")
+	
+	return nil
+}
+
+func (g *GameManager) executeRoomActionAmmoCache(player *core.PlayerState, room *core.RoomState) error {
+	// Check if ammo refill would be beneficial
+	if player.Ammo >= player.MaxAmmo {
+		fmt.Println("💡 You're already at full ammo - AmmoCache does nothing.")
+		return nil
+	}
+	
+	// Apply ammo refill
+	oldAmmo := player.Ammo
+	newAmmo := player.Ammo + core.AmmoCacheAmount
+	if newAmmo > player.MaxAmmo {
+		newAmmo = player.MaxAmmo
+	}
+	player.Ammo = newAmmo
+	
+	// Mark as used
+	player.SpecialUsed = true
+	
+	fmt.Printf("🔫 AmmoCache refill! Ammo: %d → %d (+%d)\n", 
+		oldAmmo, newAmmo, newAmmo-oldAmmo)
+	fmt.Println("✓ Room action complete (1 action used)")
+	
+	return nil
+}
+
+func (g *GameManager) executeRoomActionCleanRoom(player *core.PlayerState, room *core.RoomState) error {
+	// Get adjacent rooms
+	adjacentRoomIDs := core.GetAdjacentRooms(player.Location)
+	
+	// Count rooms that have bugs to clean
+	bugsCleaned := 0
+	roomsCleaned := 0
+	
+	fmt.Println("🧹 CleanRoom decontamination activated!")
+	
+	for _, roomID := range adjacentRoomIDs {
+		adjacentRoom := g.state.Rooms[roomID]
+		if adjacentRoom != nil && adjacentRoom.BugMarkers > 0 {
+			oldBugs := adjacentRoom.BugMarkers
+			adjacentRoom.BugMarkers--
+			bugsCleaned++
+			roomsCleaned++
+			
+			// Update corruption status
+			adjacentRoom.Corrupted = adjacentRoom.BugMarkers >= core.BugCorruptionThreshold
+			
+			fmt.Printf("   %s: %d → %d bugs (-1)\n", roomID, oldBugs, adjacentRoom.BugMarkers)
+		} else if adjacentRoom != nil {
+			fmt.Printf("   %s: 0 bugs (no effect)\n", roomID)
+		}
+	}
+	
+	if bugsCleaned == 0 {
+		fmt.Println("💡 No bugs in adjacent rooms - CleanRoom does nothing.")
+		return nil
+	}
+	
+	// Mark as used
+	player.SpecialUsed = true
+	
+	fmt.Printf("✓ Cleaned %d bugs from %d rooms (1 action used)\n", bugsCleaned, roomsCleaned)
+	
+	return nil
 }
 
 func (g *GameManager) executePass() error {
@@ -390,13 +561,10 @@ func (g *GameManager) executePass() error {
 		return fmt.Errorf("no active player")
 	}
 	
-	action := core.PassAction{
-		PlayerID: player.ID,
-	}
-	
-	newState := core.Apply(*g.state, action)
-	g.state = &newState
-	fmt.Println("You pass your turn.")
+	// Pass ends the player phase immediately
+	actionsSkipped := g.state.ActionsLeft
+	g.state.ActionsLeft = 0
+	fmt.Printf("You pass your turn. (%d actions skipped)\n", actionsSkipped)
 	
 	return nil
 }
