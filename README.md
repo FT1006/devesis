@@ -4,7 +4,7 @@
 ████████▄     ▄████████  ▄█    █▄     ▄████████    ▄████████  ▄█     ▄████████ 
 ███   ▀███   ███    ███ ███    ███   ███    ███   ███    ███ ███    ███    ███ 
 ███    ███   ███    █▀  ███    ███   ███    █▀    ███    █▀  ███▌   ███    █▀  
-███    ███  ▄███▄▄▄     ███    ███  ▄███▄▄▄       ███        ███▌   ███      
+███    ███  ▄███▄▄▄     ███    ███  ▄███▄▄▄       ███        ███▌   ███  
 ███    ███ ▀▀███▀▀▀     ███    ███ ▀▀███▀▀▀     ▀███████████ ███▌ ▀███████████ 
 ███    ███   ███    █▄  ███    ███   ███    █▄           ███ ███           ███ 
 ███   ▄███   ███    ███ ███    ███   ███    ███    ▄█    ███ ███     ▄█    ███ 
@@ -68,15 +68,11 @@ You're part of a team of self-learning developers participating in a hackathon. 
 
 **Card System**: Draw cards each turn and play them for actions. Hand limit of 6 cards - excess goes to discard pile.
 
-**Bug Corruption**: Rooms with 3+ bugs become corrupted and spawn Infinite Loop enemies every event phase.
-
 **Combat**: Battle with buggy enemies using melee attacks (free but dangerous) or shooting (costs ammo but can target adjacent rooms).
 
-**Search & Discovery**: Search rooms to find special cards and items. Engine rooms contain Engine Core cards needed for victory.
+**Room Actions, Search & Discovery**: Search rooms to find special cards and items. Engine rooms contain Engine Core cards needed for victory. Each room type has special abilities - Medical rooms heal HP, Ammo Caches refill ammunition, Clean Rooms remove bugs.
 
-**Room Actions**: Each room type has special abilities - Medical rooms heal HP, Ammo Caches refill ammunition, Clean Rooms remove bugs.
-
-**Resource Management**: Balance HP, ammo, and cards across 15 intense rounds. Some rooms provide healing, ammo, or bug cleanup.
+## 🕹️ How to Play
 
 ### How a Round Plays Out
 
@@ -101,8 +97,6 @@ Each round has **two main stages**:
 - Corrupted rooms spawn additional Infinite Loops
 
 After 15 rounds, if you haven't escaped or died, the system crashes and you lose.
-
-## 🕹️ How to Play
 
 ### Basic Commands
 
@@ -159,8 +153,7 @@ help              # Show all commands
 
 🗺️  **MAP LEGEND**:
 • **Rooms**: [ID,±,B*] = [Room ID, Searched(+/-), Bug count, OutOfRam(*)]
-• **Types**: KEY=Key STR=Start EN#=Engine ESC=Escape
-         AMO=Ammo MED=Medical CLN=Clean AIR=Air SPN=Spawn
+• **Types**: KEY=Key STR=Start EN#=Engine ESC=Escape AMO=Ammo MED=Medical CLN=Clean AIR=Air SPN=Spawn
 • **Units**: P#=Player IL=Infinite Loop SO=Stack Overflow PY=Pythogoras
 • **Status**: XXX=Unexplored room, * = OutOfRam
 
@@ -191,39 +184,22 @@ Your answer: B
 ✅ Correct! Safe movement to R07.
 ```
 
-## 🏗️ Technical Architecture
+## 🛠️ How I Built This Game
 
-### Built for Quality
+**The Challenge**: How do you turn "Tutorial Hell" into actual gameplay?
 
-- **Pure Reducer Pattern**: Deterministic game state transitions
-- **Test-Driven Development**: Comprehensive test coverage for all core mechanics
-- **Clean Architecture**: Separation of concerns with clear boundaries
-- **Type Safety**: Strong typing throughout with Go's type system
-- **REPL-like Experience**: Interactive command-line interface with immediate feedback
+I started with Nemesis's DNA - exploration with consequences, resource management, escalating tension. But instead of alien horror, the enemy is our shared developer nightmare: endless tutorials that teach nothing.
 
-### Key Features
+**The Hardest Parts** (harder than I expected):
 
-- **ASCII Art Rendering**: Beautiful terminal-based map display
-- **Pager System**: Built-in paging for rules and card browsing
-- **Effect System**: Flexible card effects with scoped targeting
-- **Question Database**: Real programming questions with educational value
-- **Save/Load**: JSON-based game state persistence
+1. **Simplifying Nemesis for CLI**: Nemesis has intents, noise tokens, event decks, room tiles, miniatures... How do you capture that richness in pure text? I had to ruthlessly cut features while keeping the core tension.
+2. **Building Fast & Maintainable**: 72 hours to build a complete game with proper architecture. I went heavy on pure functions and tests early - slower start, but paid off when adding features later without breaking everything.
+3. **CLI UI/UX is Brutal**: Everyone underestimates this. Making ASCII art align properly, handling terminal sizes, pager systems, real-time map updates - it's way harder than web UI. Every space and character matters.
 
-### Code Quality Highlights
-
-```bash
-# Run the comprehensive test suite
-go test ./pkg/core -v
-
-# Example: 30+ test cases covering edge cases
-=== RUN   TestDrawPhaseEnforcesHandLimit
-=== RUN   TestWinConditionsAllScenarios  
-=== RUN   TestMovementWithCodingQuestions
-=== RUN   TestBugCorruptionMechanics
-```
+**Built With**: Go for rapid development, pure functions for game logic, comprehensive tests for the complex state transitions. No external dependencies - just terminal, keyboard, and coffee.
 
 ---
 
 *"Escape Tutorial Hell before your sanity.exe stops responding!"*
 
-**Built with ❤️ during the Boot.dev Hackathon 2024**
+**Built with ❤️ during the Boot.dev Hackathon 2025**
