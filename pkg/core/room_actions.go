@@ -16,11 +16,6 @@ func ApplyRoomAction(state GameState, action RoomAction, log *EffectLog) GameSta
 		return newState
 	}
 	
-	// Check if room is corrupted
-	if room.Corrupted {
-		log.Add("✗ Cannot use room actions in corrupted rooms!")
-		return state // Return original state unchanged
-	}
 	
 	// Check if player already used room action this turn
 	if player.SpecialUsed {

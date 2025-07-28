@@ -110,7 +110,12 @@ type Coord struct {
 	Row, Col int
 }
 
-type EventCard struct{}
+type EventCard struct {
+	ID          CardID
+	Name        string
+	Description string
+	Effects     []Effect
+}
 // Card reference - actual cards live in pkg/cards
 // Players hold CardIDs, cards are resolved when played
 

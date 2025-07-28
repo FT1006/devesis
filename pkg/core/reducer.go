@@ -290,7 +290,7 @@ func initializeGameState(seed int64, playerClass DevClass) GameState {
 		EventIndex:    0,
 		Rooms:         make(map[RoomID]*RoomState),
 		Players:       make(map[PlayerID]*PlayerState),
-		Events:        []EventCard{},
+		Events:        initializeEventCards(),
 		SpawnBag:      initializeSpawnBag(),
 		Enemies:       make(map[EnemyID]*Enemy),
 		// Initialize pre-shuffled question order
@@ -456,6 +456,22 @@ func ValidateClassChoice(choiceID int) (DevClass, bool) {
 		}
 	}
 	return Frontend, false // Default fallback
+}
+
+// initializeEventCards loads all event cards from the CardDB
+func initializeEventCards() []EventCard {
+	eventCards := make([]EventCard, 0)
+	for cardID, card := range CardDB {
+		if card.Source == SrcEvent {
+			eventCards = append(eventCards, EventCard{
+				ID:          cardID,
+				Name:        card.Name,
+				Description: card.Description,
+				Effects:     card.Effects,
+			})
+		}
+	}
+	return eventCards
 }
 
 // initializeSpawnBag creates the initial enemy spawn pool

@@ -322,7 +322,15 @@ MOVEMENT & QUESTIONS
   - 1 bug placed in up to 2 random adjacent rooms to where you left  
   - Safe movement (no bugs)
 
-At 3+ bugs, rooms become corrupted and spawn more enemies.
+At 3+ bugs, rooms become corrupted and spawn Infinite Loop enemies every event phase.
+
+CORRUPTION SYSTEM
+-----------------
+• Rooms automatically become corrupted when they reach 3+ bug markers
+• During each event phase, every corrupted room spawns 1 Infinite Loop enemy
+• Corrupted rooms are still passable and searchable
+• Room abilities (MedBay heal, AmmoCache reload, CleanRoom debug) work normally in corrupted rooms
+• Corruption spreads the danger - clear bugs quickly to prevent enemy multiplication!
 
 CARD SYSTEM
 -----------
