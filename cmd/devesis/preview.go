@@ -54,7 +54,7 @@ func (g *GameManager) ResolveWithLogging(action core.Action) {
 	// Stream the effects if any occurred
 	if !resolveLog.IsEmpty() {
 		fmt.Println("\n— Resolve —")
-		resolveLog.StreamLines(200 * time.Millisecond)
+		resolveLog.StreamLines(1000 * time.Millisecond) // 1 second delay for clear line-by-line visibility
 	}
 }
 

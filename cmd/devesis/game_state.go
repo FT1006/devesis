@@ -402,10 +402,10 @@ func (g *GameManager) ExecuteEventPhase() {
 	// Execute event phase with logging
 	core.EventPhase(g.state, log)
 	
-	// Stream the event log with delays for readability (400ms per line)
+	// Stream the event log with delays for readability (1000ms per line)
 	if !log.IsEmpty() {
 		fmt.Println() // Add spacing before event phase
-		log.StreamLines(400 * time.Millisecond) // 400ms delay between each line
+		log.StreamLines(1000 * time.Millisecond) // 1 second delay for clear line-by-line visibility
 	}
 	
 	fmt.Printf("Time remaining: %d rounds\n", g.state.Time)
