@@ -85,7 +85,7 @@ func (g *GameManager) executeMove(args []string) error {
 			rewardAction := core.GiveSpecialCardAction{
 				PlayerID: core.GetActivePlayer(g.state).ID,
 			}
-			newState := core.Apply(*g.state, rewardAction)
+			newState := core.ApplyWithoutLog(*g.state, rewardAction)
 			
 			// Check if a card was actually added
 			oldPlayer := core.GetActivePlayer(g.state)
@@ -112,23 +112,19 @@ func (g *GameManager) executeMove(args []string) error {
 		}
 	}
 	
-	// Apply the movement action
+	// Apply the movement action with logging
 	action := core.MoveAction{
 		PlayerID: player.ID,
 		To:       core.RoomID(targetRoom),
 	}
 	
-	newState := core.Apply(*g.state, action)
+	g.ResolveWithLogging(action)
 	
-	// Check if move succeeded
-	newPlayer := core.GetActivePlayer(&newState)
+	// Check if move succeeded (effects already shown via ResolveWithLogging)
+	newPlayer := core.GetActivePlayer(g.state)
 	if newPlayer.Location == core.RoomID(targetRoom) {
-		g.state = &newState
-		fmt.Printf("✓ You move to %s.\n", targetRoom)
-		
-		// Mark room as explored when entering
-		if room := g.state.Rooms[core.RoomID(targetRoom)]; room != nil && !room.Explored {
-			room.Explored = true
+		// Show room type discovery if it's newly explored
+		if room := g.state.Rooms[core.RoomID(targetRoom)]; room != nil && room.Explored {
 			fmt.Printf("📍 You discover this is a %s.\n", g.getRoomTypeName(room.Type))
 		}
 	} else {
@@ -144,7 +140,7 @@ func (g *GameManager) applyWrongAnswerPenalties(targetRoom core.RoomID) error {
 		PlayerID: core.GetActivePlayer(g.state).ID,
 		To:       targetRoom,
 	}
-	newState := core.Apply(*g.state, action)
+	newState := core.ApplyWithoutLog(*g.state, action)
 	g.state = &newState
 	fmt.Printf("✓ You move to %s.\n", targetRoom)
 	
@@ -233,7 +229,7 @@ func (g *GameManager) executeSearch() error {
 		PlayerID: player.ID,
 	}
 	
-	newState := core.Apply(*g.state, action)
+	newState := core.ApplyWithoutLog(*g.state, action)
 	
 	// Check if search succeeded by comparing room searched status
 	room := newState.Rooms[player.Location]
@@ -440,7 +436,7 @@ func (g *GameManager) executePlayCard(args []string) error {
 		CardID:   cardID,
 	}
 	
-	newState := core.Apply(*g.state, action)
+	newState := core.ApplyWithoutLog(*g.state, action)
 	
 	// Debug: Check if card went to discard
 	oldDiscardCount := len(player.Discard)
