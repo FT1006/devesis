@@ -21,7 +21,8 @@ func TestApplyModifyHP_Self(t *testing.T) {
 		N:     2,
 	}
 
-	err := ApplyModifyHP(state, effect, "P1")
+	log := NewEffectLog()
+	err := ApplyModifyHP(state, effect, "P1", log)
 	if err != nil {
 		t.Errorf("ApplyModifyHP failed: %v", err)
 	}
@@ -54,7 +55,8 @@ func TestApplyModifyBugs_CurrentRoom(t *testing.T) {
 		N:     2, // Will hit corruption threshold
 	}
 
-	err := ApplyModifyBugs(state, effect, "P1")
+	log := NewEffectLog()
+	err := ApplyModifyBugs(state, effect, "P1", log)
 	if err != nil {
 		t.Errorf("ApplyModifyBugs failed: %v", err)
 	}

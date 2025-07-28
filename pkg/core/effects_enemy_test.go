@@ -89,7 +89,8 @@ func TestApplyMoveEnemies(t *testing.T) {
 			state = tt.setup(state)
 
 			// Apply effect
-			err := ApplyMoveEnemies(&state, tt.effect, tt.playerID)
+			log := NewEffectLog()
+			err := ApplyMoveEnemies(&state, tt.effect, tt.playerID, log)
 			if err != nil {
 				t.Fatalf("ApplyMoveEnemies failed: %v", err)
 			}

@@ -7,10 +7,11 @@ import (
 func TestShootAction_DamagesAdjacentEnemies(t *testing.T) {
 	state := newCombatTestGameState()
 	action := ShootAction{PlayerID: "P1"}
+	log := NewEffectLog()
 	
-	result := ApplyCombat(state, action)
+	result := ApplyCombat(state, action, log)
 	
-	// Enemy in adjacent room should take 1 damage
+	// Enemy in adjacent room should take damage equal to player.Damage
 	enemy := result.Enemies["E1"]
 	if enemy.HP != 2 { // 3 - 1 = 2
 		t.Errorf("Expected enemy HP 2, got %d", enemy.HP)
@@ -20,8 +21,9 @@ func TestShootAction_DamagesAdjacentEnemies(t *testing.T) {
 func TestShootAction_ConsumesAmmo(t *testing.T) {
 	state := newCombatTestGameState()
 	action := ShootAction{PlayerID: "P1"}
+	log := NewEffectLog()
 	
-	result := ApplyCombat(state, action)
+	result := ApplyCombat(state, action, log)
 	
 	player := result.Players["P1"]
 	if player.Ammo != 4 { // 5 - 1 = 4
@@ -33,8 +35,9 @@ func TestShootAction_FailsWithNoAmmo(t *testing.T) {
 	state := newCombatTestGameState()
 	state.Players["P1"].Ammo = 0
 	action := ShootAction{PlayerID: "P1"}
+	log := NewEffectLog()
 	
-	result := ApplyCombat(state, action)
+	result := ApplyCombat(state, action, log)
 	
 	// Enemy should not take damage
 	enemy := result.Enemies["E1"]
@@ -48,8 +51,9 @@ func TestMeleeAction_DamagesSameRoomEnemies(t *testing.T) {
 	// Move enemy to same room as player
 	state.Enemies["E1"].Location = "R12"
 	action := MeleeAction{PlayerID: "P1"}
+	log := NewEffectLog()
 	
-	result := ApplyCombat(state, action)
+	result := ApplyCombat(state, action, log)
 	
 	enemy := result.Enemies["E1"]
 	if enemy.HP != 2 { // 3 - 1 = 2
@@ -61,8 +65,9 @@ func TestMeleeAction_NoAmmoCost(t *testing.T) {
 	state := newCombatTestGameState()
 	state.Enemies["E1"].Location = "R12" // Same room
 	action := MeleeAction{PlayerID: "P1"}
+	log := NewEffectLog()
 	
-	result := ApplyCombat(state, action)
+	result := ApplyCombat(state, action, log)
 	
 	player := result.Players["P1"]
 	if player.Ammo != 5 { // Should remain 5
@@ -74,8 +79,9 @@ func TestCombatAction_EnemyDeath(t *testing.T) {
 	state := newCombatTestGameState()
 	state.Enemies["E1"].HP = 1 // One hit away from death
 	action := ShootAction{PlayerID: "P1"}
+	log := NewEffectLog()
 	
-	result := ApplyCombat(state, action)
+	result := ApplyCombat(state, action, log)
 	
 	// Enemy should be removed from game
 	if _, exists := result.Enemies["E1"]; exists {
@@ -96,6 +102,7 @@ func newCombatTestGameState() GameState {
 				Location: "R12",
 				Ammo:     5,
 				HP:       10,
+				Damage:   BasicDamage, // Default damage
 			},
 		},
 		Enemies: map[EnemyID]*Enemy{

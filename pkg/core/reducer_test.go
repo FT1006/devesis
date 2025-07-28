@@ -9,8 +9,9 @@ import (
 func TestApplyReturnsNewGameState(t *testing.T) {
 	state := newTestGameState()
 	action := MoveAction{PlayerID: "P1", To: "R02"}
+	log := NewEffectLog()
 	
-	result := Apply(state, action)
+	result := Apply(state, action, log)
 	
 	if reflect.DeepEqual(state, result) {
 		t.Fatal("expected state to change")
@@ -21,8 +22,9 @@ func TestApplyNeverMutatesOriginalState(t *testing.T) {
 	state := newTestGameState()
 	originalLocation := state.Players["P1"].Location
 	action := MoveAction{PlayerID: "P1", To: "R02"}
+	log := NewEffectLog()
 	
-	Apply(state, action)
+	Apply(state, action, log)
 	
 	if state.Players["P1"].Location != originalLocation {
 		t.Error("Apply mutated original state")
@@ -32,8 +34,9 @@ func TestApplyNeverMutatesOriginalState(t *testing.T) {
 func TestApplyWithInvalidActionReturnsStateUnchanged(t *testing.T) {
 	state := newTestGameState()
 	action := &invalidAction{}
+	log := NewEffectLog()
 	
-	result := Apply(state, action)
+	result := Apply(state, action, log)
 	
 	if result.Players["P1"].Location != state.Players["P1"].Location {
 		t.Error("Invalid action should not change state")
@@ -43,8 +46,9 @@ func TestApplyWithInvalidActionReturnsStateUnchanged(t *testing.T) {
 func TestMoveActionUpdatesPlayerLocation(t *testing.T) {
 	state := newTestGameState()
 	action := MoveAction{PlayerID: "P1", To: "R07"} // Adjacent to R12
+	log := NewEffectLog()
 	
-	result := Apply(state, action)
+	result := Apply(state, action, log)
 	
 	if result.Players["P1"].Location != "R07" {
 		t.Errorf("Expected player location R07, got %s", result.Players["P1"].Location)
@@ -54,8 +58,9 @@ func TestMoveActionUpdatesPlayerLocation(t *testing.T) {
 func TestMoveActionToNonAdjacentRoomFails(t *testing.T) {
 	state := newTestGameState()
 	action := MoveAction{PlayerID: "P1", To: "R01"} // Non-adjacent to R12
+	log := NewEffectLog()
 	
-	result := Apply(state, action)
+	result := Apply(state, action, log)
 	
 	if result.Players["P1"].Location != state.Players["P1"].Location {
 		t.Error("Non-adjacent move should fail")
@@ -66,8 +71,9 @@ func TestSearchActionMarksRoomSearched(t *testing.T) {
 	state := newTestGameState()
 	state.Players["P1"].Hand = []CardID{"CARD_1", "CARD_2"} // 2 cards
 	action := SearchAction{PlayerID: "P1"}
+	log := NewEffectLog()
 	
-	result := Apply(state, action)
+	result := Apply(state, action, log)
 	
 	if !result.Rooms["R12"].Searched {
 		t.Error("Search should mark room as searched")
@@ -90,7 +96,8 @@ func TestJSONRoundTrip(t *testing.T) {
 func TestRandSeedUnchanged(t *testing.T) {
 	s := newTestGameState()
 	seed := s.RandSeed
-	Apply(s, SearchAction{PlayerID: "P1"})
+	log := NewEffectLog()
+	Apply(s, SearchAction{PlayerID: "P1"}, log)
 	if s.RandSeed != seed {
 		t.Fatal("RandSeed must not change inside reducer")
 	}

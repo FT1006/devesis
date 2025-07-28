@@ -10,7 +10,8 @@ func TestSearchAction_MarksRoomSearched(t *testing.T) {
 	action := SearchAction{PlayerID: "P1"}
 	rng := rand.New(rand.NewSource(42))
 	
-	result := ApplySearch(state, action, rng)
+	log := NewEffectLog()
+	result := ApplySearch(state, action, rng, log)
 	
 	room := result.Rooms["R12"]
 	if !room.Searched {
@@ -24,7 +25,8 @@ func TestSearchAction_NoCardCost(t *testing.T) {
 	rng := rand.New(rand.NewSource(42))
 	originalHandSize := len(state.Players["P1"].Hand)
 	
-	result := ApplySearch(state, action, rng)
+	log := NewEffectLog()
+	result := ApplySearch(state, action, rng, log)
 	
 	player := result.Players["P1"]
 	if len(player.Hand) != originalHandSize {
@@ -38,7 +40,8 @@ func TestSearchAction_ProhibitedAlreadySearched(t *testing.T) {
 	action := SearchAction{PlayerID: "P1"}
 	rng := rand.New(rand.NewSource(42))
 	
-	result := ApplySearch(state, action, rng)
+	log := NewEffectLog()
+	result := ApplySearch(state, action, rng, log)
 	
 	// Should return unchanged state (prohibited action)
 	if result.Round != state.Round {
@@ -52,7 +55,8 @@ func TestSearchAction_FindsSpecialCard(t *testing.T) {
 	rng := rand.New(rand.NewSource(1)) // Seed for success
 	originalHandSize := len(state.Players["P1"].Hand)
 	
-	result := ApplySearch(state, action, rng)
+	log := NewEffectLog()
+	result := ApplySearch(state, action, rng, log)
 	
 	player := result.Players["P1"]
 	if len(player.Hand) != originalHandSize+1 {
@@ -66,7 +70,8 @@ func TestSearchAction_FailsToFindCard(t *testing.T) {
 	rng := rand.New(rand.NewSource(100)) // Seed for failure
 	originalHandSize := len(state.Players["P1"].Hand)
 	
-	result := ApplySearch(state, action, rng)
+	log := NewEffectLog()
+	result := ApplySearch(state, action, rng, log)
 	
 	player := result.Players["P1"]
 	if len(player.Hand) != originalHandSize {
@@ -90,7 +95,8 @@ func TestSearchAction_WorksInAnyRoomType(t *testing.T) {
 		action := SearchAction{PlayerID: "P1"}
 		rng := rand.New(rand.NewSource(1)) // Success seed
 		
-		result := ApplySearch(state, action, rng)
+		log := NewEffectLog()
+	result := ApplySearch(state, action, rng, log)
 		
 		if !result.Rooms["R12"].Searched {
 			t.Errorf("Search should work in %v room type", roomType)
