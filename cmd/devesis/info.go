@@ -334,7 +334,7 @@ WIN CONDITION
 
 TURN STRUCTURE (4 Phases)
 -------------------------
-1. DRAW PHASE: Auto-refill hand to 5 cards from deck
+1. DRAW PHASE: Draw 5 cards on turn 1, then 2 cards per turn
 2. PLAYER PHASE: Take up to 2 actions per turn
 3. EVENT PHASE: Time decreases, enemies attack/move, corruption spreads
 4. ROUND MAINTENANCE: Advance to next round
@@ -399,7 +399,7 @@ CORRUPTION SYSTEM
 CARD SYSTEM
 -----------
 • Deck starts with 10 random action cards
-• Hand refills to 5 cards each turn
+• Draw 5 cards on turn 1, then 2 cards per subsequent turn
 • When deck empty, discard pile shuffles back into deck
 • Special cards found by searching rooms
 

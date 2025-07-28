@@ -5,15 +5,22 @@ import (
 	"math/rand"
 )
 
-// DrawPhase refills active player to 5 cards from their deck
+// DrawPhase draws cards for the active player (5 on turn 1, 2 on subsequent turns)
 func DrawPhase(state *GameState) {
 	player := GetActivePlayer(state)
 	if player == nil {
 		return
 	}
 	
-	targetHandSize := 5
-	cardsToDraw := targetHandSize - len(player.Hand)
+	var cardsToDraw int
+	if state.Round == 1 {
+		// First turn: draw to 5 cards total
+		targetHandSize := 5
+		cardsToDraw = targetHandSize - len(player.Hand)
+	} else {
+		// Subsequent turns: draw exactly 2 cards
+		cardsToDraw = 2
+	}
 	
 	if cardsToDraw > 0 {
 		rng := rand.New(rand.NewSource(state.RandSeed + int64(state.Round)*100))

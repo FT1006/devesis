@@ -4,11 +4,11 @@ import (
 	"testing"
 )
 
-func TestDrawPhaseRefillsHandToFive(t *testing.T) {
+func TestDrawPhaseRound1RefillsToFive(t *testing.T) {
 	gs := GameState{
 		ActivePlayer: "P1",
 		RandSeed:    42,
-		Round:       1,
+		Round:       1, // First turn
 		Players: map[PlayerID]*PlayerState{
 			"P1": {
 				ID:   "P1",
@@ -20,10 +20,10 @@ func TestDrawPhaseRefillsHandToFive(t *testing.T) {
 	
 	DrawPhase(&gs)
 	
-	// Should draw 3 cards to reach 5
+	// Should draw 3 cards to reach 5 total (round 1 behavior)
 	player := gs.Players["P1"]
 	if len(player.Hand) != 5 {
-		t.Errorf("expected 5 cards in hand, got %d", len(player.Hand))
+		t.Errorf("expected 5 cards in hand on round 1, got %d", len(player.Hand))
 	}
 	
 	// Deck should have 2 cards left
@@ -42,11 +42,39 @@ func TestDrawPhaseRefillsHandToFive(t *testing.T) {
 	}
 }
 
+func TestDrawPhaseSubsequentRoundsDrawTwo(t *testing.T) {
+	gs := GameState{
+		ActivePlayer: "P1",
+		RandSeed:    42,
+		Round:       2, // Subsequent turn
+		Players: map[PlayerID]*PlayerState{
+			"P1": {
+				ID:   "P1",
+				Hand: []CardID{"C1", "C2", "C3"}, // 3 cards in hand
+				Deck: []CardID{"C4", "C5", "C6", "C7"}, // 4 cards in deck
+			},
+		},
+	}
+	
+	DrawPhase(&gs)
+	
+	// Should draw exactly 2 cards (subsequent round behavior)
+	player := gs.Players["P1"]
+	if len(player.Hand) != 5 {
+		t.Errorf("expected 5 cards in hand (3 + 2 drawn), got %d", len(player.Hand))
+	}
+	
+	// Deck should have 2 cards left
+	if len(player.Deck) != 2 {
+		t.Errorf("expected 2 cards in deck, got %d", len(player.Deck))
+	}
+}
+
 func TestDrawPhaseShufflesDiscardWhenDeckEmpty(t *testing.T) {
 	gs := GameState{
 		ActivePlayer: "P1",
 		RandSeed:    42,
-		Round:       1,
+		Round:       1, // Round 1: refill to 5
 		Players: map[PlayerID]*PlayerState{
 			"P1": {
 				ID:      "P1",
@@ -59,10 +87,10 @@ func TestDrawPhaseShufflesDiscardWhenDeckEmpty(t *testing.T) {
 	
 	DrawPhase(&gs)
 	
-	// Should draw to 5 cards
+	// Should draw 4 cards to reach 5 total (round 1 behavior)
 	player := gs.Players["P1"]
 	if len(player.Hand) != 5 {
-		t.Errorf("expected 5 cards in hand, got %d", len(player.Hand))
+		t.Errorf("expected 5 cards in hand (1 + 4 drawn), got %d", len(player.Hand))
 	}
 	
 	// Discard should be empty (shuffled into deck)
@@ -76,11 +104,11 @@ func TestDrawPhaseShufflesDiscardWhenDeckEmpty(t *testing.T) {
 	}
 }
 
-func TestDrawPhaseNoDrawWhenHandFull(t *testing.T) {
+func TestDrawPhaseRound1NoDrawWhenHandFull(t *testing.T) {
 	gs := GameState{
 		ActivePlayer: "P1",
 		RandSeed:    42,
-		Round:       1,
+		Round:       1, // Round 1: refill to 5
 		Players: map[PlayerID]*PlayerState{
 			"P1": {
 				ID:   "P1",
@@ -92,10 +120,10 @@ func TestDrawPhaseNoDrawWhenHandFull(t *testing.T) {
 	
 	DrawPhase(&gs)
 	
-	// Should not draw any cards
+	// Should not draw any cards on round 1 when already at 5
 	player := gs.Players["P1"]
 	if len(player.Hand) != 5 {
-		t.Errorf("expected 5 cards in hand, got %d", len(player.Hand))
+		t.Errorf("expected 5 cards in hand (no draw needed), got %d", len(player.Hand))
 	}
 	
 	// Deck should be unchanged
@@ -121,7 +149,7 @@ func TestDrawPhaseHandlesInsufficientCards(t *testing.T) {
 	
 	DrawPhase(&gs)
 	
-	// Should draw all available cards (3 total)
+	// Should draw all available cards (tries to draw 2, gets all 2 available)
 	player := gs.Players["P1"]
 	if len(player.Hand) != 3 {
 		t.Errorf("expected 3 cards in hand, got %d", len(player.Hand))
