@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"os"
 	"time"
 )
 
@@ -29,6 +30,7 @@ func (l *EffectLog) IsEmpty() bool {
 func (l *EffectLog) StreamLines(delay time.Duration) {
 	for _, line := range l.Lines {
 		fmt.Println(line)
+		os.Stdout.Sync() // Force flush output buffer
 		if delay > 0 {
 			time.Sleep(delay)
 		}

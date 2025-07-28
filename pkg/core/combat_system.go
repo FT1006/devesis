@@ -27,18 +27,6 @@ func ApplyCombatWithoutLog(state GameState, action Action) GameState {
 	return ApplyCombat(state, action, log)
 }
 
-func getEnemyDisplayName(enemyType EnemyType) string {
-	switch enemyType {
-	case InfiniteLoop:
-		return "Infinite Loop"
-	case StackOverflow:
-		return "Stack Overflow"
-	case Pythogoras:
-		return "Pythogoras"
-	default:
-		return "Enemy"
-	}
-}
 
 func applyShootAction(state *GameState, action ShootAction, log *EffectLog) {
 	player, exists := state.Players[action.PlayerID]

@@ -78,6 +78,20 @@ func shuffleRoomTypes(roomTypes []RoomType, rng *rand.Rand) {
 	}
 }
 
+// getEnemyDisplayName returns the display name for an enemy type
+func getEnemyDisplayName(enemyType EnemyType) string {
+	switch enemyType {
+	case InfiniteLoop:
+		return "Infinite Loop"
+	case StackOverflow:
+		return "Stack Overflow"
+	case Pythogoras:
+		return "Pythogoras"
+	default:
+		return "Enemy"
+	}
+}
+
 // drawCards draws up to `count` cards from deck to hand, handling deck reshuffling
 // Returns the number of cards actually drawn
 func drawCards(hand *[]CardID, deck *[]CardID, discard *[]CardID, count int, rng *rand.Rand) int {

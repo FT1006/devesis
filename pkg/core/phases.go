@@ -25,26 +25,35 @@ func DrawPhase(state *GameState) {
 	state.Phase = "player"
 }
 
-// EventPhase executes the 6-step event sequence from ruleset
-func EventPhase(state *GameState) {
+// EventPhase executes the 6-step event sequence from ruleset with logging
+func EventPhase(state *GameState, log *EffectLog) {
 	state.Phase = "event"
 	
+	log.Add("=== EVENT PHASE ===")
+	
 	// Step 1: Time Marker -1
+	oldTime := state.Time
 	state.Time--
+	log.Add("⏰ Step 1: Time passes - Round %d → %d", oldTime, state.Time)
 	
 	// Step 2: Malware attacks co-located developers
-	malwareAttackPhase(state)
+	log.Add("👹 Step 2: Malware attacks...")
+	malwareAttackPhase(state, log)
 	
 	// Step 3: System crashes damage malware in OutOfRam rooms
-	systemCrashPhase(state)
+	log.Add("💥 Step 3: System crashes...")
+	systemCrashPhase(state, log)
 	
 	// Step 4: Draw Event Card (apply effect from fixed deck)
-	drawEventCardPhase(state)
+	log.Add("🃏 Step 4: Event card...")
+	drawEventCardPhase(state, log)
 	
 	// Step 5: Enemy Development (draw tokens based on round)
-	enemyDevelopmentPhase(state)
+	log.Add("🧬 Step 5: Enemy development...")
+	enemyDevelopmentPhase(state, log)
 	
 	// Step 6: Check End Triggers (handled by caller)
+	log.Add("🎯 Step 6: End condition checks...")
 }
 
 // EndRoundMaintenance resets per-round flags and advances round
@@ -88,56 +97,79 @@ func CheckEndSolo(state *GameState) (ended bool, win bool) {
 
 // Helper functions for event phase steps
 
-func malwareAttackPhase(state *GameState) {
+func malwareAttackPhase(state *GameState, log *EffectLog) {
 	// For each enemy, attack any co-located players
+	attacksOccurred := false
 	for _, enemy := range state.Enemies {
 		for _, player := range state.Players {
 			if player.Location == enemy.Location && player.HP > 0 {
 				// Apply enemy damage
+				oldHP := player.HP
 				damage := enemy.Damage
 				if player.HP <= damage {
 					player.HP = 0
 				} else {
 					player.HP -= damage
 				}
+				log.Add("💔 %s attacks %s in %s! HP: %d → %d", getEnemyDisplayName(enemy.Type), player.ID, player.Location, oldHP, player.HP)
+				attacksOccurred = true
 			}
 		}
 	}
+	if !attacksOccurred {
+		log.Add("✅ No co-located enemies - players are safe")
+	}
 }
 
-func systemCrashPhase(state *GameState) {
+func systemCrashPhase(state *GameState, log *EffectLog) {
 	// Damage all malware in OutOfRam rooms
+	crashesOccurred := false
 	for enemyID, enemy := range state.Enemies {
 		room := state.Rooms[enemy.Location]
 		if room != nil && room.OutOfRam {
+			oldHP := enemy.HP
 			enemy.HP--
 			if enemy.HP <= 0 {
+				log.Add("💥 %s destroyed by system crash in %s!", getEnemyDisplayName(enemy.Type), enemy.Location)
 				delete(state.Enemies, enemyID)
+			} else {
+				log.Add("💥 %s damaged by system crash in %s! HP: %d → %d", getEnemyDisplayName(enemy.Type), enemy.Location, oldHP, enemy.HP)
 			}
+			crashesOccurred = true
 		}
+	}
+	if !crashesOccurred {
+		log.Add("✅ No enemies in OutOfRam rooms")
 	}
 }
 
-func drawEventCardPhase(state *GameState) {
+func drawEventCardPhase(state *GameState, log *EffectLog) {
 	// TODO: Implement event cards from YAML
 	// For now, just advance the event index
 	if len(state.Events) > 0 {
 		state.EventIndex = (state.EventIndex + 1) % uint8(len(state.Events))
+		log.Add("🃏 Event card %d drawn (placeholder)", state.EventIndex)
+	} else {
+		log.Add("🃏 No event cards available")
 	}
 }
 
-func enemyDevelopmentPhase(state *GameState) {
+func enemyDevelopmentPhase(state *GameState, log *EffectLog) {
 	if state.SpawnBag == nil {
+		log.Add("🧬 No spawn bag available")
 		return
 	}
 	
 	// Draw count = (round + 1) / 2
 	drawCount := (state.Round + 1) / 2
+	log.Add("🧬 Drawing %d enemy tokens (round %d)", drawCount, state.Round)
 	
 	rng := rand.New(rand.NewSource(state.RandSeed + int64(state.Round)*1000))
 	
+	spawned := 0
 	for i := 0; i < drawCount; i++ {
 		if len(state.SpawnBag.Tokens) == 0 {
+			log.Add("🧬 Spawn bag empty - no more enemies")
 			break
 		}
 		
@@ -156,14 +188,21 @@ func enemyDevelopmentPhase(state *GameState) {
 		}
 		
 		// Spawn the enemy
-		spawnEnemy(state, token, rng)
+		spawnLocation := spawnEnemy(state, token, rng, log)
+		if spawnLocation != "" {
+			spawned++
+		}
 		
 		// Add stronger token back to bag
 		addStrongerToken(state.SpawnBag, token)
 	}
+	
+	if spawned == 0 {
+		log.Add("🧬 No enemies spawned this round")
+	}
 }
 
-func spawnEnemy(state *GameState, enemyType EnemyType, rng *rand.Rand) {
+func spawnEnemy(state *GameState, enemyType EnemyType, rng *rand.Rand, log *EffectLog) RoomID {
 	// Find a random room to spawn in
 	roomIDs := make([]RoomID, 0, len(state.Rooms))
 	for roomID := range state.Rooms {
@@ -171,7 +210,7 @@ func spawnEnemy(state *GameState, enemyType EnemyType, rng *rand.Rand) {
 	}
 	
 	if len(roomIDs) == 0 {
-		return
+		return ""
 	}
 	
 	spawnRoom := roomIDs[rng.Intn(len(roomIDs))]
@@ -188,6 +227,9 @@ func spawnEnemy(state *GameState, enemyType EnemyType, rng *rand.Rand) {
 		Damage:   stats.Damage,
 		Location: spawnRoom,
 	}
+	
+	log.Add("👹 %s spawned in %s", getEnemyDisplayName(enemyType), spawnRoom)
+	return spawnRoom
 }
 
 func addStrongerToken(bag *SpawnBag, token EnemyType) {
@@ -218,4 +260,5 @@ func getEnemyTypeName(enemyType EnemyType) string {
 		return "UNKNOWN"
 	}
 }
+
 

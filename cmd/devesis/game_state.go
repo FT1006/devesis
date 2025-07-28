@@ -396,8 +396,18 @@ func (g *GameManager) ExecutePlayerPhase(reader *bufio.Reader) error {
 }
 
 func (g *GameManager) ExecuteEventPhase() {
-	fmt.Printf("\n=== EVENT PHASE ===\n")
-	core.EventPhase(g.state)
+	// Create effect log for event phase
+	log := core.NewEffectLog()
+	
+	// Execute event phase with logging
+	core.EventPhase(g.state, log)
+	
+	// Stream the event log with delays for readability (400ms per line)
+	if !log.IsEmpty() {
+		fmt.Println() // Add spacing before event phase
+		log.StreamLines(400 * time.Millisecond) // 400ms delay between each line
+	}
+	
 	fmt.Printf("Time remaining: %d rounds\n", g.state.Time)
 }
 
