@@ -171,9 +171,13 @@ func Apply(state GameState, action Action, log *EffectLog) GameState {
 		}
 
 		return newState
+
+	case ShootAction, MeleeAction:
+		// Handle combat actions
+		return ApplyCombat(state, a, log)
 }
 	
-		// Default case - return original state unchanged
+	// Default case - return original state unchanged
 	return state
 }
 

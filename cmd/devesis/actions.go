@@ -289,25 +289,7 @@ func (g *GameManager) executeShoot() error {
 		PlayerID: player.ID,
 	}
 	
-	newState := core.ApplyCombat(*g.state, action)
-	
-	// Show combat results
-	fmt.Printf("🔫 Shooting adjacent rooms! (-%d ammo)\n", core.ShootAmmoCost)
-	for roomID, enemyIDs := range targets {
-		for _, enemyID := range enemyIDs {
-			oldEnemy := g.state.Enemies[enemyID]
-			newEnemy, exists := newState.Enemies[enemyID]
-			
-			if !exists {
-				fmt.Printf("   💀 %s in %s destroyed!\n", g.getEnemyName(oldEnemy.Type), roomID)
-			} else if newEnemy.HP < oldEnemy.HP {
-				fmt.Printf("   🎯 %s in %s: %d → %d HP\n", 
-					g.getEnemyName(oldEnemy.Type), roomID, oldEnemy.HP, newEnemy.HP)
-			}
-		}
-	}
-	
-	g.state = &newState
+	g.ResolveWithLogging(action)
 	return nil
 }
 
@@ -338,23 +320,7 @@ func (g *GameManager) executeMelee() error {
 		PlayerID: player.ID,
 	}
 	
-	newState := core.ApplyCombat(*g.state, action)
-	
-	// Show combat results
-	fmt.Println("⚔️ Melee attack!")
-	for _, enemyID := range targets {
-		oldEnemy := g.state.Enemies[enemyID]
-		newEnemy, exists := newState.Enemies[enemyID]
-		
-		if !exists {
-			fmt.Printf("   💀 %s destroyed!\n", g.getEnemyName(oldEnemy.Type))
-		} else if newEnemy.HP < oldEnemy.HP {
-			fmt.Printf("   🎯 %s: %d → %d HP\n", 
-				g.getEnemyName(oldEnemy.Type), oldEnemy.HP, newEnemy.HP)
-		}
-	}
-	
-	g.state = &newState
+	g.ResolveWithLogging(action)
 	return nil
 }
 
