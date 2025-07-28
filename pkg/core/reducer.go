@@ -21,27 +21,18 @@ func Apply(state GameState, action Action) GameState {
 		// Validate move using CanMove
 		if CanMove(&newState, player.Location, a.To) {
 			player.Location = a.To
+			
+			// Mark target room as explored when entering
+			if room := newState.Rooms[a.To]; room != nil && !room.Explored {
+				room.Explored = true
+			}
 		}
 		return newState
 		
 	case SearchAction:
-		// Deep copy the state to avoid mutations
-		newState := deepCopyGameState(state)
-		player, exists := newState.Players[a.PlayerID]
-		if !exists {
-			return newState
-		}
-		
-		// Mark current room as searched
-		if room, roomExists := newState.Rooms[player.Location]; roomExists {
-			room.Searched = true
-		}
-		
-		// Discard 1 card if player has cards
-		if len(player.Hand) > 0 {
-			player.Hand = player.Hand[:len(player.Hand)-1]
-		}
-		return newState
+		// Use the proper search logic with RNG
+		rng := rand.New(rand.NewSource(state.RandSeed + int64(state.Round)*1000))
+		return ApplySearch(state, a, rng)
 
 	case PlayCardAction:
 		// Deep copy the state to avoid mutations
@@ -87,6 +78,9 @@ func deepCopyGameState(state GameState) GameState {
 		Time:          state.Time,
 		RandSeed:      state.RandSeed,
 		EventIndex:    state.EventIndex,
+		ActionsLeft:   state.ActionsLeft,
+		Phase:         state.Phase,
+		ActivePlayer:  state.ActivePlayer,
 		Rooms:         make(map[RoomID]*RoomState),
 		Players:       make(map[PlayerID]*PlayerState),
 		Events:        make([]EventCard, len(state.Events)),
@@ -163,7 +157,7 @@ func deepCopyGameState(state GameState) GameState {
 func initializeGameState(seed int64, playerClass DevClass) GameState {
 	state := GameState{
 		Round:         1,
-		Time:          0,
+		Time:          15, // Start with 15 time units
 		RandSeed:      seed,
 		EventIndex:    0,
 		Rooms:         make(map[RoomID]*RoomState),
@@ -211,7 +205,7 @@ func initializeGameState(seed int64, playerClass DevClass) GameState {
 		Ammo:         classStats.MaxAmmo,
 		MaxAmmo:      classStats.MaxAmmo,
 		Hand:         []CardID{},
-		Deck:         []CardID{},
+		Deck:         createRandomStartingDeck(seed),
 		Discard:      []CardID{},
 		Location:     "R12", // Start room
 		HasActed:     false,
@@ -219,6 +213,11 @@ func initializeGameState(seed int64, playerClass DevClass) GameState {
 		PersonalObj:  ObjectiveID(""),
 		CorporateObj: ObjectiveID(""),
 	}
+
+	// Set turn controller state
+	state.ActivePlayer = playerID  // "P1" for solo mode
+	state.Phase = "player"
+	state.ActionsLeft = 0 // Will be set by DrawPhase
 
 	return state
 }
@@ -338,4 +337,36 @@ func initializeSpawnBag() *SpawnBag {
 func initializeQuestionOrder(seed int64) []int {
 	rng := rand.New(rand.NewSource(seed))
 	return rng.Perm(50) // Creates [0,1,2,...,49] in random order
+}
+
+// createRandomStartingDeck creates a random 10-card starting deck from action cards
+func createRandomStartingDeck(seed int64) []CardID {
+	rng := rand.New(rand.NewSource(seed + 1000)) // Offset seed for deck generation
+	
+	// Get all action card IDs from the loaded CardDB
+	actionCards := make([]CardID, 0)
+	for cardID, card := range CardDB {
+		if card.Source == SrcAction {
+			actionCards = append(actionCards, cardID)
+		}
+	}
+	
+	// If no cards loaded, return empty deck (fallback)
+	if len(actionCards) == 0 {
+		return []CardID{}
+	}
+	
+	// Shuffle action cards using Fisher-Yates
+	for i := len(actionCards) - 1; i > 0; i-- {
+		j := rng.Intn(i + 1)
+		actionCards[i], actionCards[j] = actionCards[j], actionCards[i]
+	}
+	
+	// Take first 10 (or all if fewer than 10)
+	deckSize := 10
+	if len(actionCards) < 10 {
+		deckSize = len(actionCards)
+	}
+	
+	return actionCards[:deckSize]
 }
