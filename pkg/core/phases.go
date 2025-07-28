@@ -132,11 +132,14 @@ func systemCrashPhase(state *GameState, log *EffectLog) {
 		room := state.Rooms[enemy.Location]
 		if room != nil && room.OutOfRam {
 			oldHP := enemy.HP
-			enemy.HP -= 2  // Increased damage from 1 to 2
-			if enemy.HP <= 0 {
+			damage := uint8(2)
+			
+			// Check if damage would kill the enemy (prevent uint8 underflow)
+			if enemy.HP <= damage {
 				log.Add("💥 %s destroyed by system crash in %s!", getEnemyDisplayName(enemy.Type), enemy.Location)
 				delete(state.Enemies, enemyID)
 			} else {
+				enemy.HP -= damage
 				log.Add("💥 %s damaged by system crash in %s! HP: %d → %d", getEnemyDisplayName(enemy.Type), enemy.Location, oldHP, enemy.HP)
 			}
 			crashesOccurred = true
