@@ -105,11 +105,6 @@ func (g *GameManager) renderMap() string {
 		}
 	}
 	
-	// Add R20 escape room info (normally in column G)
-	r20Room := g.state.Rooms["R20"]
-	if r20Room != nil {
-		result.WriteString(fmt.Sprintf("\n[R20 Escape Room]: %s\n", g.formatRoomStatus(r20Room)))
-	}
 	
 	// Add mini-guide with examples
 	result.WriteString("\n")
