@@ -139,7 +139,13 @@ func Apply(state GameState, action Action, log *EffectLog) GameState {
 
 		// Move card from hand to discard pile using helper
 		moveCardByIndex(&player.Hand, &player.Discard, cardIndex)
-		log.Add("🃏 %s plays %s", a.PlayerID, a.CardID)
+		
+		// Log card play with name and description
+		if card, exists := CardDB[a.CardID]; exists {
+			log.Add("🃏 %s plays %s - %s", a.PlayerID, card.Name, card.Description)
+		} else {
+			log.Add("🃏 %s plays %s", a.PlayerID, a.CardID)
+		}
 
 		// Check for engine card usage at escape room
 		if a.CardID == "SPECIAL_ENGINE" {
