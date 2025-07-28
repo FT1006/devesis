@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"math/rand"
 )
 
@@ -20,11 +21,62 @@ func Apply(state GameState, action Action) GameState {
 		
 		// Validate move using CanMove
 		if CanMove(&newState, player.Location, a.To) {
+			oldLocation := player.Location
 			player.Location = a.To
 			
 			// Mark target room as explored when entering
 			if room := newState.Rooms[a.To]; room != nil && !room.Explored {
 				room.Explored = true
+			}
+			
+			// Movement consequence: RNG bug placement (3 equal outcomes)
+			rng := rand.New(rand.NewSource(newState.RandSeed + int64(newState.Round)*1000 + int64(len(newState.Players))))
+			bugOutcome := rng.Intn(3) // 0, 1, or 2
+			
+			// Debug output (temporary)
+			fmt.Printf("🐛 Movement consequence: outcome %d ", bugOutcome)
+			
+			switch bugOutcome {
+			case 0:
+				// 1 bug in current room (where player moved FROM)
+				if oldRoom := newState.Rooms[oldLocation]; oldRoom != nil {
+					oldRoom.BugMarkers += 1
+					if oldRoom.BugMarkers > MaxBugMarkers {
+						oldRoom.BugMarkers = MaxBugMarkers
+					}
+					fmt.Printf("- added 1 bug to %s\n", oldLocation)
+				}
+			case 1:
+				// 1 bug in max 2 surrounding rooms of old location
+				adjacentRooms := GetAdjacentRooms(oldLocation)
+				if len(adjacentRooms) > 0 {
+					// Shuffle adjacent rooms and pick max 2
+					shuffledRooms := make([]RoomID, len(adjacentRooms))
+					copy(shuffledRooms, adjacentRooms)
+					for i := len(shuffledRooms) - 1; i > 0; i-- {
+						j := rng.Intn(i + 1)
+						shuffledRooms[i], shuffledRooms[j] = shuffledRooms[j], shuffledRooms[i]
+					}
+					
+					maxRooms := 2
+					if len(shuffledRooms) < maxRooms {
+						maxRooms = len(shuffledRooms)
+					}
+					
+					for i := 0; i < maxRooms; i++ {
+						if room := newState.Rooms[shuffledRooms[i]]; room != nil {
+							room.BugMarkers += 1
+							if room.BugMarkers > MaxBugMarkers {
+								room.BugMarkers = MaxBugMarkers
+							}
+							fmt.Printf("- added 1 bug to %s ", shuffledRooms[i])
+						}
+					}
+					fmt.Printf("\n")
+				}
+			case 2:
+				// Safe - no bugs added
+				fmt.Printf("- safe movement!\n")
 			}
 		}
 		return newState
