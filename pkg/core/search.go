@@ -35,7 +35,7 @@ func ApplySearch(state GameState, action SearchAction, rng *rand.Rand, log *Effe
 	switch player.Location {
 	case "R01": // KEY room - gives BOOT.dev KEY power
 		oldDamage := player.Damage
-		player.Damage = 3 // Increase damage from 1 to 3
+		player.Damage = BootDevDamage // Increase damage from BasicDamage to BootDevDamage
 		log.Add("🔑 Found the BOOT.dev KEY! Damage: %d → %d", oldDamage, player.Damage)
 		// Note: This is a permanent power upgrade, not a card
 		return newState

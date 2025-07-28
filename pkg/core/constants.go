@@ -15,8 +15,8 @@ const (
 	ShootAmmoCost     = 1
 	
 	// Combat damage
-	ShootDamage = 1
-	MeleeDamage = 1
+	BasicDamage = 1    // Default player damage
+	BootDevDamage = 3  // KEY item damage bonus
 	
 	// Room abilities
 	MedBayHealAmount  = 2

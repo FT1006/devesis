@@ -354,7 +354,7 @@ func initializeGameState(seed int64, playerClass DevClass) GameState {
 		MaxHP:        classStats.HP,
 		Ammo:         classStats.MaxAmmo,
 		MaxAmmo:      classStats.MaxAmmo,
-		Damage:       ShootDamage, // Base damage
+		Damage:       BasicDamage, // Base damage
 		Hand:         []CardID{},
 		Deck:         createRandomStartingDeck(seed),
 		Discard:      []CardID{},

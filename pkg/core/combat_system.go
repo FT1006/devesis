@@ -52,8 +52,9 @@ func applyShootAction(state *GameState, action ShootAction, log *EffectLog) {
 		for _, roomID := range adjacentRooms {
 			if enemy.Location == roomID {
 				oldHP := enemy.HP
-				if enemy.HP > ShootDamage {
-					enemy.HP -= ShootDamage
+				damage := player.Damage
+				if enemy.HP > damage {
+					enemy.HP -= damage
 				} else if enemy.HP > 0 {
 					enemy.HP = 0
 				}
@@ -78,8 +79,9 @@ func applyMeleeAction(state *GameState, action MeleeAction, log *EffectLog) {
 	for _, enemy := range state.Enemies {
 		if enemy.Location == player.Location {
 			oldHP := enemy.HP
-			if enemy.HP > MeleeDamage {
-				enemy.HP -= MeleeDamage
+			damage := player.Damage
+			if enemy.HP > damage {
+				enemy.HP -= damage
 			} else if enemy.HP > 0 {
 				enemy.HP = 0
 			}
